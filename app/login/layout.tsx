@@ -1,7 +1,7 @@
 import React from 'react';
 
-// KUNCI PERBAIKAN: Memaksa Cloudflare agar TIDAK PERNAH meng-cache HTML halaman Login
-// sehingga browser selalu mendapat file JavaScript versi terbaru.
+// KUNCI FIX: Beri tahu Cloudflare bahwa rute dinamis ini berjalan di Edge, bukan Node.js!
+export const runtime = 'edge'; 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 

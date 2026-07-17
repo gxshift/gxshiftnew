@@ -54,9 +54,12 @@ export default function AdminLogin() {
       description: 'Membuka gerbang Command Center...',
     });
 
-    // Beri jeda 1 detik agar browser selesai menulis Cookie, lalu hard redirect
+    // KUNCI FIX: Taktik Cache-Buster Cloudflare
+    // Kita menambahkan timestamp (?t=123456...) di akhir URL.
+    // Ini memaksa Cloudflare menganggap ini URL baru dan TIDAK BISA menggunakan cache redirect lamanya!
     setTimeout(() => {
-      window.location.href = '/dashboard';
+      const timestamp = new Date().getTime();
+      window.location.href = `/dashboard?t=${timestamp}`;
     }, 1000);
   };
 
