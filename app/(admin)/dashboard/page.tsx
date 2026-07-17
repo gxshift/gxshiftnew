@@ -8,7 +8,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export const runtime = 'edge';
-export const revalidate = 0; // Disable cache agar statistik selalu realtime
+export const dynamic = 'force-dynamic'; // Disable cache agar statistik selalu realtime
 
 export default async function AdminDashboardOverview() {
   // 1. Ambil Total Orders

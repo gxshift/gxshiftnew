@@ -10,7 +10,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export const runtime = 'edge';
-export const revalidate = 0; 
+export const dynamic = 'force-dynamic'; 
 
 export default async function OrderPage() {
   // Fetch Level (Paket) Mobile Legends yang aktif
