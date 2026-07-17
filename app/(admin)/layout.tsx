@@ -2,7 +2,7 @@ import React from 'react';
 import type { Metadata } from 'next';
 import AdminSidebar from '@/components/layouts/AdminSidebar';
 import { Providers } from '../providers';
-
+export const runtime = 'edge';
 export const metadata: Metadata = {
   title: 'GXSHIFT | Admin Command Center',
   description: 'Control panel for GXSHIFT Platform',

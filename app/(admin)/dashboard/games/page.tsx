@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { Gamepad2, Edit2, Trash2, Plus, AlertCircle, Upload } from 'lucide-react';
 import { toast } from 'sonner';
-
+export const runtime = 'edge';
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
 type Game = { id: string; name: string; slug: string; cover_image: string | null; is_active: boolean; order_index: number; };

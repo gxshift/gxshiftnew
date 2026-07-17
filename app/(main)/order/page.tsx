@@ -9,7 +9,7 @@ import { ChevronLeft } from 'lucide-react';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
+export const runtime = 'edge';
 export const revalidate = 0; 
 
 export default async function OrderPage() {
