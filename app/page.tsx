@@ -8,8 +8,10 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export const runtime = 'edge';
-export const dynamic = 'force-dynamic'; // Disable cache agar data selalu aktual
+// KUNCI PERBAIKAN: 
+// Kita hapus runtime='edge' dan force-dynamic agar Next.js mencetak index.html secara fisik.
+// Ini adalah satu-satunya cara menghentikan Cloudflare membajak Beranda dengan gambar ikon.
+export const revalidate = 60; // Data otomatis di-refresh dari Supabase setiap 60 detik
 
 export default async function Home() {
   // 1. Fetch Levels (Tarik SEMUA game yang aktif agar Tabs Kategori berfungsi)
@@ -17,7 +19,6 @@ export default async function Home() {
     .from('levels')
     .select('*, games!inner(*)')
     .eq('is_active', true)
-    // .eq('games.slug', 'mobile-legends') <--- BARIS INI TELAH DIHAPUS
     .order('order_index');
 
   // 2. Fetch FAQs
