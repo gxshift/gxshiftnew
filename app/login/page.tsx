@@ -1,14 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
 import { Mail, Lock, LogIn, AlertCircle, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
+
+// Import Server Action yang baru saja kita buat
+import { authenticate } from './actions';
 
 // Skema Validasi
 const loginSchema = z.object({
@@ -19,14 +20,7 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function AdminLogin() {
-  const router = useRouter();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
-
-  // Inisialisasi Supabase khusus untuk Client Component (otomatis sinkronisasi dengan Cookies)
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
 
   const {
     register,
@@ -39,13 +33,10 @@ export default function AdminLogin() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsAuthenticating(true);
     
-    // Proses Autentikasi Supabase
-    const { error } = await supabase.auth.signInWithPassword({
-      email: data.email,
-      password: data.password,
-    });
+    // Panggil fungsi Server Action (Cookie akan diset oleh Server secara absolut)
+    const result = await authenticate(data.email, data.password);
 
-    if (error) {
+    if (result.error) {
       toast.error('Akses Ditolak', {
         description: 'Email atau password salah.',
       });
@@ -57,8 +48,7 @@ export default function AdminLogin() {
       description: 'Membuka gerbang Command Center...',
     });
     
-    // KUNCI PERBAIKAN: Menggunakan Native Browser Redirect (Hard Navigation)
-    // Ini memastikan seluruh state browser di-refresh dan Cookies terkirim sempurna ke Middleware
+    // Hard Redirect: Karena cookie diset oleh server, middleware 100% akan mendeteksinya
     setTimeout(() => {
       window.location.href = '/dashboard';
     }, 800);
