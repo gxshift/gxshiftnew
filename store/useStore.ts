@@ -1,15 +1,15 @@
 import { create } from 'zustand';
 
-interface AppState {
-  isMobileMenuOpen: boolean;
-  setMobileMenuOpen: (isOpen: boolean) => void;
+interface GlobalState {
+  whatsappNumber: string;
+  setWhatsappNumber: (num: string) => void;
   activeGameId: string | null;
   setActiveGameId: (id: string | null) => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
-  isMobileMenuOpen: false,
-  setMobileMenuOpen: (isOpen) => set({ isMobileMenuOpen: isOpen }),
+export const useStore = create<GlobalState>((set) => ({
+  whatsappNumber: '6281234567890', // Fallback default
+  setWhatsappNumber: (num) => set({ whatsappNumber: num }),
   activeGameId: null,
   setActiveGameId: (id) => set({ activeGameId: id }),
 }));
