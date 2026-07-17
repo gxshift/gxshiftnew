@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
+// KUNCI PERBAIKAN: Menggunakan createBrowserClient dari @supabase/ssr agar token otomatis tersimpan di Cookies
+import { createBrowserClient } from '@supabase/ssr';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -18,14 +19,15 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-// Inisialisasi Supabase Client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
 export default function AdminLogin() {
   const router = useRouter();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  // Inisialisasi Supabase khusus untuk Client Component (otomatis sinkronisasi dengan Cookies)
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   const {
     register,
@@ -56,9 +58,11 @@ export default function AdminLogin() {
       description: 'Selamat datang di Command Center.',
     });
     
-    // Redirect ke Dashboard (Memaksa refresh agar middleware mengevaluasi ulang session)
-    router.push('/dashboard');
-    router.refresh();
+    // KUNCI PERBAIKAN 2: Kita beri jeda 500ms agar browser punya waktu untuk menulis Cookies sebelum dilempar oleh router
+    router.refresh(); // Memaksa layout dan middleware membaca ulang Cookies
+    setTimeout(() => {
+      router.push('/dashboard');
+    }, 500);
   };
 
   return (
@@ -143,10 +147,6 @@ export default function AdminLogin() {
               )}
             </button>
           </form>
-
-          <p className="text-center text-[10px] text-gray-500 mt-8 uppercase tracking-widest">
-            Sistem diproteksi dengan enkripsi AES-256
-          </p>
         </div>
       </motion.div>
     </div>
