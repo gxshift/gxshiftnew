@@ -1,11 +1,9 @@
 'use client';
 
-import React, { useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
-import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Trophy, Zap, Clock } from 'lucide-react';
 import { Level } from '@/types';
-import Link from 'next/link';
 
 interface PackageCarouselProps {
   levels: Level[];
@@ -13,106 +11,141 @@ interface PackageCarouselProps {
 }
 
 export default function PackageCarousel({ levels, whatsappNumber }: PackageCarouselProps) {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+  // 1. Ekstrak Game unik & Type Guard agar TypeScript tahu 'game' tidak mungkin undefined
+  const uniqueGames = Array.from(
+    new Map(levels.map((level) => [level.games?.id, level.games])).values()
+  ).filter((game): game is NonNullable<Level['games']> => game !== undefined && game !== null);
+
+  // 2. Set Game pertama sebagai Tab aktif secara default
+  const [activeGameId, setActiveGameId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Tambahan uniqueGames[0] untuk memastikan objek benar-benar ada sebelum mengambil .id
+    if (uniqueGames.length > 0 && uniqueGames[0] && !activeGameId) {
+      setActiveGameId(uniqueGames[0].id);
+    }
+  }, [uniqueGames, activeGameId]);
+
+  // 3. Filter levels sesuai Tab Game yang sedang diklik
+  const filteredLevels = levels.filter((level) => level.game_id === activeGameId);
+
+  // 4. Setup Embla Carousel
+  const [emblaRef, emblaApi] = useEmblaCarousel({
     align: 'start',
-    loop: false,
-    dragFree: true
+    containScroll: 'trimSnaps',
+    dragFree: true,
   });
 
-  const scrollPrev = useCallback(() => {
-    if (emblaApi) emblaApi.scrollPrev();
-  }, [emblaApi]);
+  const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
 
-  const scrollNext = useCallback(() => {
-    if (emblaApi) emblaApi.scrollNext();
-  }, [emblaApi]);
+  // Format Rupiah
+  const formatRupiah = (price: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
+
+  // Generate WhatsApp Link
+  const createWaLink = (level: Level) => {
+    const text = `Halo Admin GXSHIFT!%0A%0ASaya ingin order joki untuk game *${level.games?.name}*.%0A%0A*Detail Pesanan:*%0A- Target: *${level.name} (${level.sub_level})*%0A- Harga: *${formatRupiah(level.price)}*%0A%0AMohon info ketersediaan slotnya. Terima kasih!`;
+    return `https://wa.me/${whatsappNumber}?text=${text}`;
+  };
 
   if (!levels || levels.length === 0) {
     return <div className="text-center text-gray-500 py-10">Belum ada paket yang tersedia.</div>;
   }
 
   return (
-    <div className="relative w-full max-w-7xl mx-auto px-4">
-      {/* Tombol Navigasi Kiri */}
-      <button 
-        onClick={scrollPrev}
-        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-6 z-10 w-12 h-12 bg-black/80 border border-primary/50 text-primary rounded-full flex items-center justify-center hover:bg-primary hover:text-black transition-all shadow-[0_0_15px_rgba(166,255,0,0.2)] backdrop-blur-md hidden md:flex"
-      >
-        <ChevronLeft size={24} />
-      </button>
-
-      {/* Embla Viewport */}
-      <div className="overflow-hidden" ref={emblaRef}>
-        <div className="flex backface-hidden touch-pan-y gap-4 md:gap-6 py-8">
-          {levels.map((level, index) => (
-            <motion.div
-              key={level.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              whileHover={{ y: -10 }}
-              className="relative flex-[0_0_100%] sm:flex-[0_0_calc(50%-12px)] lg:flex-[0_0_calc(25%-18px)] min-w-0"
+    <div className="w-full relative px-4 sm:px-12 max-w-[1400px] mx-auto">
+      
+      {/* TABS KATEGORI GAME */}
+      {uniqueGames.length > 0 && (
+        <div className="flex justify-center gap-3 mb-10 overflow-x-auto pb-4 no-scrollbar">
+          {uniqueGames.map((game) => (
+            <button
+              key={game.id}
+              onClick={() => setActiveGameId(game.id)}
+              className={`px-8 py-3 rounded-full font-bold text-xs uppercase tracking-[0.15em] transition-all whitespace-nowrap border ${
+                activeGameId === game.id
+                  ? 'bg-primary text-black border-primary shadow-[0_0_20px_rgba(166,255,0,0.3)]'
+                  : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'
+              }`}
             >
-              <div className="glass-panel p-6 rounded-2xl h-full flex flex-col items-center text-center border border-white/5 hover:border-primary/50 transition-colors group relative overflow-hidden">
-                {/* Hover Glow Effect */}
-                <div className="absolute inset-0 bg-gradient-to-b from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-                
-                {/* Dynamic/Popular Badge */}
-                {level.price === 0 && (
-                  <div className="absolute top-0 right-0 bg-primary text-black text-[9px] font-black px-4 py-1 rounded-bl-xl uppercase tracking-widest shadow-[0_0_10px_rgba(166,255,0,0.5)]">
-                    Custom Order
-                  </div>
-                )}
+              {game.name}
+            </button>
+          ))}
+        </div>
+      )}
 
-                <h3 className="text-xl font-black text-white italic mb-1 uppercase tracking-tight mt-4">
+      {/* CAROUSEL WRAPPER */}
+      <div className="overflow-hidden" ref={emblaRef}>
+        <div className="flex gap-6 pb-8 pt-4">
+          {filteredLevels.map((level) => (
+            <div
+              key={level.id}
+              className="flex-[0_0_100%] sm:flex-[0_0_calc(50%-12px)] lg:flex-[0_0_calc(33.333%-16px)] xl:flex-[0_0_calc(25%-18px)] min-w-0"
+            >
+              {/* CARD PRODUK */}
+              <div className="glass-panel p-6 rounded-3xl border border-white/5 flex flex-col items-center relative overflow-hidden bg-[#0a0a0a] group hover:border-primary/50 transition-colors duration-300">
+                
+                {/* Badge Nama Game */}
+                <div className="absolute top-4 right-4 bg-white/5 text-gray-300 text-[8px] px-2.5 py-1 rounded-full border border-white/10 uppercase tracking-widest font-bold group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-all">
+                  {level.games?.name}
+                </div>
+
+                <h3 className="text-2xl font-black italic text-white mt-4 uppercase tracking-tight">
                   {level.name}
                 </h3>
-                <p className="text-xs text-primary font-medium mb-6 uppercase tracking-widest">
-                  {level.sub_level || 'All Tiers'}
+                <p className="text-primary text-xs font-bold uppercase tracking-[0.2em] mb-6">
+                  {level.sub_level}
                 </p>
-                
-                <div className="w-28 h-28 mb-6 bg-black/50 border border-white/10 rounded-full flex items-center justify-center group-hover:shadow-[0_0_30px_rgba(166,255,0,0.2)] transition-all">
-                  {level.icon_url ? (
-                    <img src={level.icon_url} alt={level.name} className="w-20 h-20 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
-                  ) : (
-                    <Trophy className="w-12 h-12 text-gray-600 group-hover:text-primary transition-colors" />
-                  )}
+
+                <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-8 border border-white/10 group-hover:scale-110 transition-transform duration-500">
+                  <Trophy className="text-gray-500 group-hover:text-primary transition-colors" size={40} strokeWidth={1.5} />
                 </div>
 
-                <div className="w-full flex justify-between items-end border-b border-white/10 pb-4 mb-6 mt-auto">
-                  <div className="text-left flex flex-col gap-1">
-                    <span className="flex items-center gap-1 text-[10px] text-gray-500 uppercase tracking-wider">
-                      <Clock size={12} /> Estimasi
+                <div className="w-full flex justify-between items-end border-t border-white/10 pt-4 mb-6">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] text-gray-500 uppercase flex items-center gap-1 tracking-wider">
+                      <Clock size={10} /> Estimasi
                     </span>
-                    <p className="text-sm font-bold text-gray-300">{level.estimated_time}</p>
+                    <span className="text-sm font-bold text-white mt-0.5">{level.estimated_time}</span>
                   </div>
-                  <div className="text-right flex flex-col gap-1">
-                    <span className="flex items-center justify-end gap-1 text-[10px] text-gray-500 uppercase tracking-wider">
-                      <Zap size={12} /> Start From
+                  <div className="flex flex-col text-right">
+                    <span className="text-[9px] text-gray-500 uppercase flex items-center justify-end gap-1 tracking-wider">
+                      <Zap size={10} /> Start From
                     </span>
-                    <p className={`font-black text-primary ${level.price === 0 ? 'text-lg' : 'text-xl'}`}>
-                      {level.price === 0 ? 'DYNAMIC' : `Rp ${level.price.toLocaleString('id-ID')}`}
-                    </p>
+                    <span className="text-xl font-black text-primary mt-0.5">{formatRupiah(level.price)}</span>
                   </div>
                 </div>
-                
-                <Link 
-                  href={`/order?level=${level.id}`}
-                  className="w-full py-3.5 bg-white/5 border border-white/10 text-white font-bold rounded-xl hover:bg-primary hover:text-black hover:border-primary transition-all flex items-center justify-center gap-2 group-hover:shadow-[0_0_20px_rgba(166,255,0,0.3)] z-10"
+
+                <a
+                  href={createWaLink(level)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold rounded-xl text-xs uppercase tracking-widest transition-all text-center flex items-center justify-center gap-2"
                 >
-                  ORDER SEKARANG
-                </Link>
+                  Order Sekarang
+                </a>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
 
-      {/* Tombol Navigasi Kanan */}
-      <button 
+      {/* NAVIGASI CAROUSEL (Konflik CSS Tailwind diselesaikan dengan menghapus base 'flex') */}
+      <button
+        onClick={scrollPrev}
+        className="absolute left-0 top-[60%] -translate-y-1/2 w-12 h-12 bg-[#050505] border border-primary/30 rounded-full hidden sm:flex items-center justify-center text-primary hover:bg-primary hover:text-black transition-all shadow-[0_0_15px_rgba(166,255,0,0.1)] hover:scale-110 z-10"
+      >
+        <ChevronLeft size={24} />
+      </button>
+      <button
         onClick={scrollNext}
-        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-6 z-10 w-12 h-12 bg-black/80 border border-primary/50 text-primary rounded-full flex items-center justify-center hover:bg-primary hover:text-black transition-all shadow-[0_0_15px_rgba(166,255,0,0.2)] backdrop-blur-md hidden md:flex"
+        className="absolute right-0 top-[60%] -translate-y-1/2 w-12 h-12 bg-[#050505] border border-primary/30 rounded-full hidden sm:flex items-center justify-center text-primary hover:bg-primary hover:text-black transition-all shadow-[0_0_15px_rgba(166,255,0,0.1)] hover:scale-110 z-10"
       >
         <ChevronRight size={24} />
       </button>

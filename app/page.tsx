@@ -11,12 +11,12 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export const revalidate = 0; // Disable cache agar data selalu aktual
 
 export default async function Home() {
-  // 1. Fetch Levels (Hanya yang aktif dan dari game Mobile Legends)
+  // 1. Fetch Levels (Tarik SEMUA game yang aktif agar Tabs Kategori berfungsi)
   const { data: levelsData } = await supabase
     .from('levels')
     .select('*, games!inner(*)')
     .eq('is_active', true)
-    .eq('games.slug', 'mobile-legends')
+    // .eq('games.slug', 'mobile-legends') <--- BARIS INI TELAH DIHAPUS
     .order('order_index');
 
   // 2. Fetch FAQs
