@@ -3,11 +3,16 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation'; // KUNCI UTAMA: Import pendeteksi rute
 
 export default function BlastDoorOverlay() {
+  const pathname = usePathname(); // Dapatkan URL saat ini
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Jika bukan di halaman beranda (/), jangan kunci scroll dan batalkan efek loading
+    if (pathname !== '/') return;
+
     document.body.style.overflow = 'hidden';
 
     // Durasi total loading sebelum pintu terbuka (2.2 detik)
@@ -20,7 +25,12 @@ export default function BlastDoorOverlay() {
       clearTimeout(timer);
       document.body.style.overflow = 'unset';
     };
-  }, []);
+  }, [pathname]);
+
+  // KUNCI UTAMA: Jika rute saat ini BUKAN beranda, jangan render komponen ini sama sekali
+  if (pathname !== '/') {
+    return null;
+  }
 
   return (
     <AnimatePresence>
@@ -36,9 +46,7 @@ export default function BlastDoorOverlay() {
               y: '-100%', 
               transition: { duration: 0.9, ease: [0.76, 0, 0.24, 1], delay: 0.3 } 
             }}
-            // KUNCI FIX 1: Memaksa pintu berada di posisi y: 0 secara native CSS sebelum Framer menyala
             style={{ transform: 'translateY(0%)' }} 
-            // KUNCI FIX 2: h-[50.5vh] mencegah adanya bocoran celah 1px di tengah layar pada monitor besar
             className="absolute top-0 left-0 w-full h-[50.5vh] bg-[#050505] border-b-[3px] border-primary shadow-[0_15px_50px_rgba(166,255,0,0.2)] pointer-events-auto z-20"
           >
             {/* Tekstur/Garis Pintu Mekanis */}
