@@ -2,12 +2,18 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  // 1. Buat response default
-  let supabaseResponse = NextResponse.next({
-    request,
-  });
+  const path = request.nextUrl.pathname;
+  const isDashboard = path.startsWith('/dashboard');
+  const isLogin = path.startsWith('/login');
 
-  // 2. Inisialisasi Supabase Client
+  // BYPASS: Jika bukan ke /login atau /dashboard, langsung loloskan.
+  // Ini akan menyelamatkan Beranda (/) Anda dari masalah ikon Cloudflare.
+  if (!isDashboard && !isLogin) {
+    return NextResponse.next();
+  }
+
+  let supabaseResponse = NextResponse.next({ request });
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -16,17 +22,12 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        // PERBAIKAN: Menambahkan tipe data eksplisit untuk cookiesToSet agar TypeScript tidak protes
+        // PERBAIKAN TYPESCRIPT: Tipe data eksplisit ditambahkan di sini
         setAll(cookiesToSet: { name: string; value: string; options: any }[]) {
-          // Update cookie di request
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           
-          // Perbarui response dengan cookie terbaru
-          supabaseResponse = NextResponse.next({
-            request,
-          });
+          supabaseResponse = NextResponse.next({ request });
           
-          // Terapkan cookie ke response yang akan dikirim kembali ke browser
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           );
@@ -35,24 +36,23 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // 3. Validasi User
   const { data: { user } } = await supabase.auth.getUser();
 
-  // 4. ATURAN KEAMANAN (Routing Guard)
-  if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
+  if (isDashboard && !user) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  if (request.nextUrl.pathname.startsWith('/login') && user) {
+  if (isLogin && user) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   return supabaseResponse;
 }
 
-// 5. MATCHER OPTIMASI PERFORMA
+// MATCHER OPTIMASI TINGKAT DEWA
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/dashboard/:path*',
+    '/login'
   ],
 };

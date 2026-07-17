@@ -2,8 +2,6 @@
 
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
 
 export async function authenticate(email: string, password: string) {
   const cookieStore = await cookies();
@@ -34,12 +32,11 @@ export async function authenticate(email: string, password: string) {
     password,
   });
 
-  // Jika gagal, kembalikan pesan error ke Client
   if (error) {
     return { error: error.message };
   }
 
-  // KUNCI UTAMA: Hancurkan cache "Belum Login" dan lempar pengunjung dari Server!
-  revalidatePath('/', 'layout');
-  redirect('/dashboard');
+  // KUNCI PERBAIKAN: Jangan gunakan redirect() dari Server! 
+  // Biarkan Client yang melakukan pemindahan halaman secara Hard Reload.
+  return { success: true };
 }

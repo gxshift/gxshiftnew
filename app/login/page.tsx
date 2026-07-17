@@ -33,18 +33,29 @@ export default function AdminLogin() {
     setIsAuthenticating(true);
     toast.loading('Memverifikasi akses...', { id: 'auth-toast' });
     
-    // Panggil Server Action. 
-    // Jika sukses, Server akan OTOMATIS memindahkan halaman (redirect).
+    // Panggil Server Action (Cookie akan dipasang dengan kuat di tahap ini)
     const result = await authenticate(data.email, data.password);
 
-    // Kode di bawah ini HANYA akan tereksekusi jika otentikasi GAGAL (karena jika sukses, sudah di-redirect di atas)
     if (result?.error) {
       toast.error('Akses Ditolak', {
         id: 'auth-toast',
         description: 'Email atau password salah.',
       });
       setIsAuthenticating(false);
+      return; // Berhenti di sini jika gagal
     }
+
+    // JIKA BERHASIL: Munculkan pesan sukses
+    toast.success('Otentikasi Berhasil', {
+      id: 'auth-toast',
+      description: 'Membuka gerbang Command Center...',
+    });
+
+    // KUNCI PERBAIKAN: Hard Redirect. Memaksa browser me-refresh total 
+    // agar Middleware membaca Cookie secara sempurna!
+    setTimeout(() => {
+      window.location.href = '/dashboard';
+    }, 800);
   };
 
   return (
