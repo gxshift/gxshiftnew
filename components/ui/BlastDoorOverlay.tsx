@@ -36,7 +36,10 @@ export default function BlastDoorOverlay() {
               y: '-100%', 
               transition: { duration: 0.9, ease: [0.76, 0, 0.24, 1], delay: 0.3 } 
             }}
-            className="absolute top-0 left-0 w-full h-1/2 bg-[#050505] border-b-[3px] border-primary shadow-[0_15px_50px_rgba(166,255,0,0.2)] pointer-events-auto z-20"
+            // KUNCI FIX 1: Memaksa pintu berada di posisi y: 0 secara native CSS sebelum Framer menyala
+            style={{ transform: 'translateY(0%)' }} 
+            // KUNCI FIX 2: h-[50.5vh] mencegah adanya bocoran celah 1px di tengah layar pada monitor besar
+            className="absolute top-0 left-0 w-full h-[50.5vh] bg-[#050505] border-b-[3px] border-primary shadow-[0_15px_50px_rgba(166,255,0,0.2)] pointer-events-auto z-20"
           >
             {/* Tekstur/Garis Pintu Mekanis */}
             <div className="absolute bottom-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
@@ -49,7 +52,8 @@ export default function BlastDoorOverlay() {
               y: '100%', 
               transition: { duration: 0.9, ease: [0.76, 0, 0.24, 1], delay: 0.3 } 
             }}
-            className="absolute bottom-0 left-0 w-full h-1/2 bg-[#050505] border-t-[3px] border-primary shadow-[0_-15px_50px_rgba(166,255,0,0.2)] pointer-events-auto z-20"
+            style={{ transform: 'translateY(0%)' }}
+            className="absolute bottom-0 left-0 w-full h-[50.5vh] bg-[#050505] border-t-[3px] border-primary shadow-[0_-15px_50px_rgba(166,255,0,0.2)] pointer-events-auto z-20"
           >
             <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
           </motion.div>
@@ -67,6 +71,7 @@ export default function BlastDoorOverlay() {
             {/* Ambient Glow di belakang logo */}
             <div className="absolute w-48 h-48 bg-primary/20 blur-[60px] rounded-full animate-pulse" />
 
+            {/* Logo Center */}
             <motion.div
               animate={{
                 y: [-4, 4, -4],
@@ -77,15 +82,15 @@ export default function BlastDoorOverlay() {
                 duration: 2,
                 ease: "easeInOut"
               }}
-              className="mb-8 relative"
+              className="mb-8 relative flex justify-center items-center"
             >
               <Image
                 src="/loading-logo.webp"
                 alt="GXSHIFT Initializing"
                 width={150}
                 height={150}
-                priority
-                className="drop-shadow-[0_0_15px_rgba(166,255,0,0.5)]"
+                priority // WAJIB agar logo tidak lazy-load
+                className="drop-shadow-[0_0_20px_rgba(166,255,0,0.6)] object-contain"
               />
             </motion.div>
 
