@@ -8,10 +8,9 @@ import { motion } from 'framer-motion';
 import { Mail, Lock, LogIn, AlertCircle, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
-// Import Server Action yang baru saja kita buat
+// Import Server Action
 import { authenticate } from './actions';
 
-// Skema Validasi
 const loginSchema = z.object({
   email: z.string().email('Format email tidak valid'),
   password: z.string().min(6, 'Password minimal 6 karakter'),
@@ -32,26 +31,20 @@ export default function AdminLogin() {
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsAuthenticating(true);
+    toast.loading('Memverifikasi akses...', { id: 'auth-toast' });
     
-    // Panggil fungsi Server Action (Cookie akan diset oleh Server secara absolut)
+    // Panggil Server Action. 
+    // Jika sukses, Server akan OTOMATIS memindahkan halaman (redirect).
     const result = await authenticate(data.email, data.password);
 
-    if (result.error) {
+    // Kode di bawah ini HANYA akan tereksekusi jika otentikasi GAGAL (karena jika sukses, sudah di-redirect di atas)
+    if (result?.error) {
       toast.error('Akses Ditolak', {
+        id: 'auth-toast',
         description: 'Email atau password salah.',
       });
       setIsAuthenticating(false);
-      return;
     }
-
-    toast.success('Otentikasi Berhasil', {
-      description: 'Membuka gerbang Command Center...',
-    });
-    
-    // Hard Redirect: Karena cookie diset oleh server, middleware 100% akan mendeteksinya
-    setTimeout(() => {
-      window.location.href = '/dashboard';
-    }, 800);
   };
 
   return (
@@ -68,7 +61,6 @@ export default function AdminLogin() {
         className="w-full max-w-md relative z-10"
       >
         <div className="glass-panel p-10 rounded-3xl border border-primary/20 shadow-[0_0_50px_rgba(166,255,0,0.05)] relative overflow-hidden backdrop-blur-xl">
-          {/* Top Glow */}
           <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
 
           <div className="flex flex-col items-center text-center mb-10">

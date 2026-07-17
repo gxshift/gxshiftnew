@@ -1,11 +1,11 @@
-// app/login/actions.ts
 'use server';
 
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 
 export async function authenticate(email: string, password: string) {
-  // Di Next.js 15, cookies() bersifat Asynchronous
   const cookieStore = await cookies();
 
   const supabase = createServerClient(
@@ -16,29 +16,30 @@ export async function authenticate(email: string, password: string) {
         getAll() {
           return cookieStore.getAll();
         },
-        // PERBAIKAN: Menambahkan tipe data eksplisit agar TypeScript tidak protes
         setAll(cookiesToSet: { name: string; value: string; options: any }[]) {
           try {
             cookiesToSet.forEach(({ name, value, options }) => {
               cookieStore.set({ name, value, ...options });
             });
           } catch (error) {
-            // Error saat set cookies dari dalam Server Action dapat diabaikan
+            // Aman diabaikan di lingkungan Server Action
           }
         },
       },
     }
   );
 
-  // Proses otentikasi langsung di sisi Server
   const { error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
 
+  // Jika gagal, kembalikan pesan error ke Client
   if (error) {
     return { error: error.message };
   }
 
-  return { success: true };
+  // KUNCI UTAMA: Hancurkan cache "Belum Login" dan lempar pengunjung dari Server!
+  revalidatePath('/', 'layout');
+  redirect('/dashboard');
 }
