@@ -46,7 +46,8 @@ export default async function Home() {
   const faqs = (faqsData as Faq[]) || [];
   const testimonials = (testimonialsData as Testimonial[]) || [];
   const whatsappNumber = (settingsData as SiteSetting)?.setting_value || '6282120002589';
-
+ 
+  
   return (
     <div className="flex flex-col min-h-screen bg-background text-white font-sans overflow-x-hidden">
       
