@@ -8,7 +8,7 @@ interface GlobalState {
 }
 
 export const useStore = create<GlobalState>((set) => ({
-  whatsappNumber: '6281234567890', // Fallback default
+  whatsappNumber: '6282120002589', // Fallback default
   setWhatsappNumber: (num) => set({ whatsappNumber: num }),
   activeGameId: null,
   setActiveGameId: (id) => set({ activeGameId: id }),

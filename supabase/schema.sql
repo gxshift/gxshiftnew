@@ -187,7 +187,7 @@ CREATE POLICY "Admin manage storage" ON storage.objects FOR ALL USING (public.is
 
 -- Insert Settings
 INSERT INTO public.settings (setting_key, setting_value) VALUES
-('whatsapp_number', '"6281234567890"'),
+('whatsapp_number', '"6282120002589"'),
 ('site_logo', '"/assets/logo.png"'),
 ('hero_banner', '{"title": "Rank Up", "subtitle": "Dominate. Be Legendary.", "image": "/assets/hero-bg.jpg"}'),
 ('statistics', '[{"label": "Active Users", "value": "15K+"}, {"label": "Orders Completed", "value": "50K+"}, {"label": "Pro Boosters", "value": "200+"}]')

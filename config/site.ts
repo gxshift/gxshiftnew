@@ -4,7 +4,7 @@ export const siteConfig = {
     url: process.env.NEXT_PUBLIC_SITE_URL || "https://gxshift.com",
     ogImage: "/assets/og-image.jpg",
     links: {
-      whatsapp: "https://wa.me/6281234567890", // Fallback if DB fetch fails
+      whatsapp: "https://wa.me/6282120002589", // Fallback if DB fetch fails
       instagram: "https://instagram.com/gxshift",
     },
     keywords: [
