@@ -1,9 +1,15 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import dynamic from 'next/dynamic';
+
+// --- OPTION B (Netlify AI Solution) ---
+// Memuat komponen visual secara dinamis dan mematikan SSR (Server-Side Rendering)
+const BlastDoorOverlay = dynamic(() => import('@/components/ui/BlastDoorOverlay'), { ssr: false });
+const Toaster = dynamic(() => import('sonner').then((mod) => mod.Toaster), { ssr: false });
+
+// Provider dibiarkan standar, tapi PASTIKAN di file ReactQueryProvider.tsx sudah ada "use client";
 import ReactQueryProvider from '@/components/providers/ReactQueryProvider';
-import BlastDoorOverlay from '@/components/ui/BlastDoorOverlay';
-import { Toaster } from 'sonner';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
