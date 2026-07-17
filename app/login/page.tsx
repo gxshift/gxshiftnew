@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-// KUNCI PERBAIKAN: Menggunakan createBrowserClient dari @supabase/ssr agar token otomatis tersimpan di Cookies
 import { createBrowserClient } from '@supabase/ssr';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -55,14 +54,14 @@ export default function AdminLogin() {
     }
 
     toast.success('Otentikasi Berhasil', {
-      description: 'Selamat datang di Command Center.',
+      description: 'Membuka gerbang Command Center...',
     });
     
-    // KUNCI PERBAIKAN 2: Kita beri jeda 500ms agar browser punya waktu untuk menulis Cookies sebelum dilempar oleh router
-    router.refresh(); // Memaksa layout dan middleware membaca ulang Cookies
+    // KUNCI PERBAIKAN: Menggunakan Native Browser Redirect (Hard Navigation)
+    // Ini memastikan seluruh state browser di-refresh dan Cookies terkirim sempurna ke Middleware
     setTimeout(() => {
-      router.push('/dashboard');
-    }, 500);
+      window.location.href = '/dashboard';
+    }, 800);
   };
 
   return (
@@ -151,4 +150,4 @@ export default function AdminLogin() {
       </motion.div>
     </div>
   );
-}  
+}
