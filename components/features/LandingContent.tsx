@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-// PERBAIKAN 1: Menambahkan 'Zap' ke dalam import lucide-react
 import { Shield, Star, Activity, ChevronDown, CheckCircle2, Zap } from 'lucide-react';
 import PackageCarousel from '@/components/ui/PackageCarousel';
 import { Level, Faq, Testimonial } from '@/types';
@@ -160,11 +159,11 @@ export default function LandingContent({ levels, faqs, testimonials, whatsappNum
           
           <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
             {[
-              { title: "CHOOSE PACKAGE", desc: "Pilih paket rank sesuai targetmu." },
-              { title: "CONTACT US", desc: "Hubungi admin via WhatsApp." },
-              { title: "SECURE LOGIN", desc: "Proses login 100% aman terenkripsi." },
-              { title: "BOOSTING", desc: "Pro player mulai melakukan push rank." },
-              { title: "DONE", desc: "Rank tercapai, akun dikembalikan." }
+              { title: "PILIH GAME", desc: "Pilih game kompetitif yang ingin kamu mainkan." },
+              { title: "PILIH PAKET & LEVEL", desc: "Tentukan paket dan level target boost kamu." },
+              { title: "PESAN VIA WHATSAPP", desc: "Kirim detail pesanan langsung ke WhatsApp admin." },
+              { title: "PEMBAYARAN", desc: "Selesaikan transaksi melalui metode pembayaran aman." },
+              { title: "GRINDING RANKING", desc: "Duduk manis, pro player kami akan selesaikan targetmu." }
             ].map((step, idx) => (
               <motion.div 
                 key={idx}
@@ -180,7 +179,6 @@ export default function LandingContent({ levels, faqs, testimonials, whatsappNum
                 <h4 className="text-sm font-bold text-white mb-2 uppercase">{step.title}</h4>
                 <p className="text-[10px] text-gray-400 px-2 leading-relaxed">{step.desc}</p>
                 
-                {/* PERBAIKAN 2 & 3: Menggunakan h-px dan bg-linear-to-r sesuai standar Tailwind v4 */}
                 {idx < 4 && (
                   <div className="hidden md:block absolute top-8 right-[-50%] w-full h-px bg-linear-to-r from-primary/50 to-transparent -z-10" />
                 )}
