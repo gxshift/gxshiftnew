@@ -25,10 +25,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" className="dark">
-      <body className={`${inter.variable} font-sans antialiased bg-[#0A0A0B] text-white min-h-screen flex flex-col selection:bg-[#A6FF00] selection:text-black`}>
+      <body className={`${inter.variable} font-sans antialiased bg-background text-white min-h-screen flex flex-col selection:bg-primary selection:text-black`}>
         <ReactQueryProvider>
           <BlastDoorOverlay />
-          <main className="flex-grow flex flex-col">
+          <main className="grow flex flex-col">
             {children}
           </main>
           <Toaster 
