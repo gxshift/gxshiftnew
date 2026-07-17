@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { Providers } from './providers';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -24,11 +23,10 @@ export default function RootLayout({
   return (
     <html lang="id" className="dark">
       <body className={`${inter.variable} font-sans antialiased bg-background text-white min-h-screen flex flex-col selection:bg-primary selection:text-black`}>
-        <Providers>
-          <main className="grow flex flex-col">
-            {children}
-          </main>
-        </Providers>
+        {/* Semua Provider, Toaster, dan BlastDoor disingkirkan sementara dari Layout utama */}
+        <main className="grow flex flex-col">
+          {children}
+        </main>
       </body>
     </html>
   );
