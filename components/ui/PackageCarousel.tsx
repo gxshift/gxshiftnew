@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
-import { ChevronLeft, ChevronRight, Trophy, Zap, Clock, X, Send, User, Phone } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trophy, Zap, Clock, X, Send, User, Phone, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@supabase/supabase-js';
 import { Level } from '@/types';
@@ -18,10 +18,9 @@ interface PackageCarouselProps {
 }
 
 export default function PackageCarousel({ levels: initialLevels, whatsappNumber }: PackageCarouselProps) {
-  // --- SOLUSI NEXT.JS CACHE: State untuk menampung data yang selalu fresh ---
+  // --- STATE DATA FRESH ---
   const [liveLevels, setLiveLevels] = useState<Level[]>(initialLevels);
 
-  // Auto-Sync Background: Diam-diam menarik data terbaru dari Supabase saat komponen dimuat
   useEffect(() => {
     const fetchFreshLevels = async () => {
       const { data } = await supabase
@@ -39,10 +38,11 @@ export default function PackageCarousel({ levels: initialLevels, whatsappNumber 
 
   const [selectedPackage, setSelectedPackage] = useState<Level | null>(null);
   
-  // STATE FORM
+  // STATE FORM & PENCARIAN
   const [customerName, setCustomerName] = useState('');
   const [waNumber, setWaNumber] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const uniqueGames = Array.from(new Map(liveLevels.map((level) => [level.games?.id, level.games])).values()).filter((game): game is NonNullable<Level['games']> => game !== undefined && game !== null);
   const [activeGameId, setActiveGameId] = useState<string | null>(null);
@@ -51,7 +51,14 @@ export default function PackageCarousel({ levels: initialLevels, whatsappNumber 
     if (uniqueGames.length > 0 && uniqueGames[0] && !activeGameId) setActiveGameId(uniqueGames[0].id);
   }, [uniqueGames, activeGameId]);
 
-  const filteredLevels = liveLevels.filter((level) => level.game_id === activeGameId);
+  // LOGIKA FILTER
+  const filteredLevels = liveLevels.filter((level) => {
+    const matchGame = level.game_id === activeGameId;
+    const matchSearch = level.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                        (level.sub_level && level.sub_level.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchGame && matchSearch;
+  });
+
   const [emblaRef, emblaApi] = useEmblaCarousel({ align: 'start', containScroll: 'trimSnaps', dragFree: true });
   const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
@@ -94,62 +101,101 @@ export default function PackageCarousel({ levels: initialLevels, whatsappNumber 
 
   return (
     <div className="w-full relative px-4 sm:px-12 max-w-[1400px] mx-auto">
+      
       {/* TABS GAME */}
       {uniqueGames.length > 0 && (
-        <div className="flex justify-center gap-3 mb-10 overflow-x-auto pb-4 no-scrollbar">
+        <div className="flex justify-center gap-3 mb-8 overflow-x-auto pb-4 no-scrollbar">
           {uniqueGames.map((game) => (
-            <button key={game.id} onClick={() => setActiveGameId(game.id)} className={`px-8 py-3 rounded-full font-bold text-xs uppercase tracking-[0.15em] transition-all whitespace-nowrap border ${ activeGameId === game.id ? 'bg-primary text-black border-primary shadow-[0_0_20px_rgba(166,255,0,0.3)]' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white' }`}>
+            <button key={game.id} onClick={() => { setActiveGameId(game.id); setSearchQuery(''); }} className={`px-8 py-3 rounded-full font-bold text-xs uppercase tracking-[0.15em] transition-all whitespace-nowrap border ${ activeGameId === game.id ? 'bg-primary text-black border-primary shadow-[0_0_20px_rgba(166,255,0,0.3)]' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white' }`}>
               {game.name}
             </button>
           ))}
         </div>
       )}
 
-      {/* CAROUSEL */}
-      <div className="overflow-hidden" ref={emblaRef}>
-        <div className="flex gap-6 pb-8 pt-4">
-          {filteredLevels.map((level) => (
-            <div key={level.id} className="flex-[0_0_100%] sm:flex-[0_0_calc(50%-12px)] lg:flex-[0_0_calc(33.333%-16px)] xl:flex-[0_0_calc(25%-18px)] min-w-0">
-              <div className="glass-panel p-6 rounded-3xl border border-white/5 flex flex-col items-center relative overflow-hidden bg-[#0a0a0a] group hover:border-primary/50 transition-colors duration-300">
-                <div className="absolute top-4 right-4 bg-white/5 text-gray-300 text-[8px] px-2.5 py-1 rounded-full border border-white/10 uppercase tracking-widest font-bold group-hover:bg-primary/10 group-hover:text-primary transition-all">
-                  {level.games?.name}
-                </div>
-                <h3 className="text-2xl font-black italic text-white mt-4 uppercase tracking-tight">{level.name}</h3>
-                <p className="text-primary text-xs font-bold uppercase tracking-[0.2em] mb-6">{level.sub_level}</p>
-                
-                {/* TAMPILAN ICON BEBAS FRAME (FREE-FLOATING GLOW) */}
-                <div className="h-32 w-full flex items-center justify-center mb-6 group-hover:scale-110 group-hover:-translate-y-2 transition-all duration-500 relative">
-                  {/* Efek Cahaya Bias di Belakang Gambar */}
-                  <div className="absolute w-24 h-24 bg-primary/20 blur-[40px] rounded-full opacity-40 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none" />
-                  
-                  {level.icon_url ? (
-                    <img 
-                      src={level.icon_url} 
-                      alt={level.name} 
-                      className="w-auto h-full max-h-[120px] object-contain relative z-10 drop-shadow-[0_0_20px_rgba(166,255,0,0.5)] group-hover:drop-shadow-[0_0_40px_rgba(166,255,0,0.8)] transition-all duration-500" 
-                    />
-                  ) : (
-                    <Trophy className="text-gray-500 group-hover:text-primary transition-colors relative z-10 drop-shadow-[0_0_15px_rgba(166,255,0,0.2)]" size={70} strokeWidth={1} />
-                  )}
-                </div>
-
-                <div className="w-full flex justify-between items-end border-t border-white/10 pt-4 mb-6">
-                  <div className="flex flex-col"><span className="text-[9px] text-gray-500 uppercase flex items-center gap-1 tracking-wider"><Clock size={10} /> Estimasi</span><span className="text-sm font-bold text-white mt-0.5">{level.estimated_time}</span></div>
-                  <div className="flex flex-col text-right"><span className="text-[9px] text-gray-500 uppercase flex items-center justify-end gap-1 tracking-wider"><Zap size={10} /> Start From</span><span className="text-xl font-black text-primary mt-0.5">{formatRupiah(level.price)}</span></div>
-                </div>
-                <button onClick={() => setSelectedPackage(level)} className="w-full py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold rounded-xl text-xs uppercase tracking-widest transition-all text-center flex items-center justify-center gap-2">
-                  Order Sekarang
-                </button>
-              </div>
-            </div>
-          ))}
+      {/* SEARCH BAR */}
+      <div className="max-w-md mx-auto mb-10 relative">
+        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
+          <Search size={18} />
         </div>
+        <input 
+          type="text" 
+          placeholder="Cari target rank atau paket..." 
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full bg-white/5 border border-white/10 rounded-full pl-12 pr-4 py-3.5 text-sm focus:border-primary focus:outline-none text-white transition-colors shadow-[0_0_15px_rgba(0,0,0,0.2)] focus:shadow-[0_0_20px_rgba(166,255,0,0.1)]"
+        />
+        {searchQuery && (
+          <button onClick={() => setSearchQuery('')} className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-primary transition-colors">
+            <X size={16} />
+          </button>
+        )}
       </div>
 
-      <button onClick={scrollPrev} className="absolute left-0 top-[60%] -translate-y-1/2 w-12 h-12 bg-[#050505] border border-primary/30 rounded-full hidden sm:flex items-center justify-center text-primary hover:bg-primary hover:text-black transition-all z-10"><ChevronLeft size={24} /></button>
-      <button onClick={scrollNext} className="absolute right-0 top-[60%] -translate-y-1/2 w-12 h-12 bg-[#050505] border border-primary/30 rounded-full hidden sm:flex items-center justify-center text-primary hover:bg-primary hover:text-black transition-all z-10"><ChevronRight size={24} /></button>
+      {/* CAROUSEL WRAPPER */}
+      <div className="relative group">
+        
+        <div className="overflow-hidden" ref={emblaRef}>
+          <div className="flex gap-6 pb-8 pt-4 px-2">
+            
+            {filteredLevels.length === 0 ? (
+              <div className="w-full py-12 text-center text-gray-500">
+                Paket tidak ditemukan. Coba kata kunci lain.
+              </div>
+            ) : (
+              filteredLevels.map((level) => (
+                <div key={level.id} className="flex-[0_0_100%] sm:flex-[0_0_calc(50%-12px)] lg:flex-[0_0_calc(33.333%-16px)] xl:flex-[0_0_calc(25%-18px)] min-w-0">
+                  <div className="glass-panel p-6 rounded-3xl border border-white/5 flex flex-col items-center relative overflow-hidden bg-[#0a0a0a] group/card hover:border-primary/50 transition-colors duration-300">
+                    <div className="absolute top-4 right-4 bg-white/5 text-gray-300 text-[8px] px-2.5 py-1 rounded-full border border-white/10 uppercase tracking-widest font-bold group-hover/card:bg-primary/10 group-hover/card:text-primary transition-all">
+                      {level.games?.name}
+                    </div>
+                    <h3 className="text-2xl font-black italic text-white mt-4 uppercase tracking-tight text-center">{level.name}</h3>
+                    <p className="text-primary text-xs font-bold uppercase tracking-[0.2em] mb-6 text-center">{level.sub_level}</p>
+                    
+                    {/* TAMPILAN ICON DIPERBESAR 30% */}
+                    <div className="h-40 w-full flex items-center justify-center mb-6 group-hover/card:scale-110 group-hover/card:-translate-y-2 transition-all duration-500 relative">
+                      {/* Efek Cahaya Bias di Belakang Gambar (Lebih Besar) */}
+                      <div className="absolute w-32 h-32 bg-primary/20 blur-[50px] rounded-full opacity-40 group-hover/card:opacity-80 transition-opacity duration-500 pointer-events-none" />
+                      
+                      {level.icon_url ? (
+                        <img 
+                          src={level.icon_url} 
+                          alt={level.name} 
+                          className="w-auto h-full max-h-[160px] object-contain relative z-10 drop-shadow-[0_0_20px_rgba(166,255,0,0.5)] group-hover/card:drop-shadow-[0_0_40px_rgba(166,255,0,0.8)] transition-all duration-500" 
+                        />
+                      ) : (
+                        <Trophy className="text-gray-500 group-hover/card:text-primary transition-colors relative z-10 drop-shadow-[0_0_15px_rgba(166,255,0,0.2)]" size={90} strokeWidth={1} />
+                      )}
+                    </div>
 
-      {/* MODAL */}
+                    <div className="w-full flex justify-between items-end border-t border-white/10 pt-4 mb-6">
+                      <div className="flex flex-col"><span className="text-[9px] text-gray-500 uppercase flex items-center gap-1 tracking-wider"><Clock size={10} /> Estimasi</span><span className="text-sm font-bold text-white mt-0.5">{level.estimated_time}</span></div>
+                      <div className="flex flex-col text-right"><span className="text-[9px] text-gray-500 uppercase flex items-center justify-end gap-1 tracking-wider"><Zap size={10} /> Start From</span><span className="text-xl font-black text-primary mt-0.5">{formatRupiah(level.price)}</span></div>
+                    </div>
+                    <button onClick={() => setSelectedPackage(level)} className="w-full py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold rounded-xl text-xs uppercase tracking-widest transition-all text-center flex items-center justify-center gap-2">
+                      Order Sekarang
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* PANAH NAVIGASI */}
+        {filteredLevels.length > 0 && (
+          <>
+            <button onClick={scrollPrev} className="absolute -left-3 md:-left-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-black/80 backdrop-blur-md border border-primary/30 rounded-full flex items-center justify-center text-primary hover:bg-primary hover:text-black transition-all z-20 shadow-[0_0_15px_rgba(166,255,0,0.2)]">
+              <ChevronLeft size={24} />
+            </button>
+            <button onClick={scrollNext} className="absolute -right-3 md:-right-8 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 bg-black/80 backdrop-blur-md border border-primary/30 rounded-full flex items-center justify-center text-primary hover:bg-primary hover:text-black transition-all z-20 shadow-[0_0_15px_rgba(166,255,0,0.2)]">
+              <ChevronRight size={24} />
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* MODAL CHECKOUT */}
       <AnimatePresence>
         {selectedPackage && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
