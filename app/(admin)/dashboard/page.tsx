@@ -1,39 +1,81 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { ShoppingCart, DollarSign, Gamepad2, Trophy, Clock, ArrowUpRight } from 'lucide-react';
+import { ShoppingCart, DollarSign, Gamepad2, Trophy, Clock, ArrowUpRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
-// Inisialisasi Supabase Server-Side
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+// 🚀 HARDCODE FALLBACK (Menghindari Bug Cloudflare Env)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xozvcoknqgzftjlsngba.supabase.co';
+// MASUKKAN KODE ANON KEY ANDA DI BAWAH INI:
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvenZjb2tucWd6ZnRqbHNuZ2JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2ODEyODUsImV4cCI6MjA5OTI1NzI4NX0.yxMNuFBfbZBI96BDAQB_krzBcKnGoJGyiCu3Kozj_Gc';
+
+// Inisialisasi Murni Client-Side (Otomatis membaca tiket login di LocalStorage)
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
-export const runtime = 'edge';
-export const dynamic = 'force-dynamic'; // Disable cache agar statistik selalu realtime
 
-export default async function AdminDashboardOverview() {
-  // 1. Ambil Total Orders
-  const { count: orderCount } = await supabase
-    .from('orders')
-    .select('*', { count: 'exact', head: true });
+export default function AdminDashboardOverview() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState({
+    orderCount: 0,
+    totalRevenue: 0,
+    gameCount: 0,
+    levelCount: 0,
+    recentOrders: [] as any[]
+  });
 
-  // 2. Ambil Total Pendapatan (Hanya pesanan berstatus 'completed')
-  const { data: completedOrders } = await supabase
-    .from('orders')
-    .select('total_price')
-    .eq('status', 'completed');
-  
-  const totalRevenue = completedOrders?.reduce((sum, order) => sum + Number(order.total_price), 0) || 0;
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        // 1. Ambil Total Orders
+        const { count: orderCount } = await supabase
+          .from('orders')
+          .select('*', { count: 'exact', head: true });
 
-  // 3. Ambil Total Game & Paket Aktif
-  const { count: gameCount } = await supabase.from('games').select('*', { count: 'exact', head: true }).eq('is_active', true);
-  const { count: levelCount } = await supabase.from('levels').select('*', { count: 'exact', head: true }).eq('is_active', true);
+        // 2. Ambil Total Pendapatan
+        const { data: completedOrders } = await supabase
+          .from('orders')
+          .select('total_price')
+          .eq('status', 'completed');
+        
+        const totalRevenue = completedOrders?.reduce((sum, order) => sum + Number(order.total_price), 0) || 0;
 
-  // 4. Ambil 5 Pesanan Terbaru
-  const { data: recentOrders } = await supabase
-    .from('orders')
-    .select('*, games(name), levels(name)')
-    .order('created_at', { ascending: false })
-    .limit(5);
+        // 3. Ambil Total Game & Paket Aktif
+        const { count: gameCount } = await supabase.from('games').select('*', { count: 'exact', head: true }).eq('is_active', true);
+        const { count: levelCount } = await supabase.from('levels').select('*', { count: 'exact', head: true }).eq('is_active', true);
+
+        // 4. Ambil 5 Pesanan Terbaru
+        const { data: recentOrders } = await supabase
+          .from('orders')
+          .select('*, games(name), levels(name)')
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        setStats({
+          orderCount: orderCount || 0,
+          totalRevenue,
+          gameCount: gameCount || 0,
+          levelCount: levelCount || 0,
+          recentOrders: recentOrders || []
+        });
+      } catch (error) {
+        console.error("Gagal memuat data dasbor:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  // Tampilkan efek loading selagi Browser menarik data dari Supabase
+  if (isLoading) {
+    return (
+      <div className="w-full h-[60vh] flex flex-col items-center justify-center text-primary">
+        <Loader2 size={40} className="animate-spin opacity-50 mb-4" />
+        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 animate-pulse">Menyiapkan Command Center...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 relative z-10">
@@ -59,7 +101,7 @@ export default async function AdminDashboardOverview() {
           <div className="flex justify-between items-start mb-4 relative z-10">
             <div>
               <p className="text-xs text-gray-400 uppercase font-bold tracking-widest mb-1">Total Pendapatan</p>
-              <h3 className="text-2xl font-black text-primary glow-text">Rp {(totalRevenue / 1000).toLocaleString('id-ID')}K</h3>
+              <h3 className="text-2xl font-black text-primary glow-text">Rp {(stats.totalRevenue / 1000).toLocaleString('id-ID')}K</h3>
             </div>
             <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
               <DollarSign size={20} />
@@ -72,7 +114,7 @@ export default async function AdminDashboardOverview() {
           <div className="flex justify-between items-start mb-4 relative z-10">
             <div>
               <p className="text-xs text-gray-400 uppercase font-bold tracking-widest mb-1">Total Pesanan</p>
-              <h3 className="text-2xl font-black text-white">{orderCount || 0}</h3>
+              <h3 className="text-2xl font-black text-white">{stats.orderCount}</h3>
             </div>
             <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center text-gray-400">
               <ShoppingCart size={20} />
@@ -85,7 +127,7 @@ export default async function AdminDashboardOverview() {
           <div className="flex justify-between items-start mb-4 relative z-10">
             <div>
               <p className="text-xs text-gray-400 uppercase font-bold tracking-widest mb-1">Game Aktif</p>
-              <h3 className="text-2xl font-black text-white">{gameCount || 0}</h3>
+              <h3 className="text-2xl font-black text-white">{stats.gameCount}</h3>
             </div>
             <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center text-gray-400">
               <Gamepad2 size={20} />
@@ -98,7 +140,7 @@ export default async function AdminDashboardOverview() {
           <div className="flex justify-between items-start mb-4 relative z-10">
             <div>
               <p className="text-xs text-gray-400 uppercase font-bold tracking-widest mb-1">Paket Level Aktif</p>
-              <h3 className="text-2xl font-black text-white">{levelCount || 0}</h3>
+              <h3 className="text-2xl font-black text-white">{stats.levelCount}</h3>
             </div>
             <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center text-gray-400">
               <Trophy size={20} />
@@ -126,8 +168,8 @@ export default async function AdminDashboardOverview() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {recentOrders && recentOrders.length > 0 ? (
-                recentOrders.map((order) => (
+              {stats.recentOrders && stats.recentOrders.length > 0 ? (
+                stats.recentOrders.map((order) => (
                   <tr key={order.id} className="hover:bg-white/5 transition-colors">
                     <td className="p-4">
                       <p className="font-bold text-white uppercase">{order.customer_name}</p>
