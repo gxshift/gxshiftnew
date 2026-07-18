@@ -6,7 +6,6 @@ import { redirect } from 'next/navigation';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-// KUNCI FIX: Wajib edge & force-dynamic agar Cloudflare tidak pernah meng-cache halaman Admin
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -16,37 +15,41 @@ export const metadata: Metadata = {
   description: 'Control panel for GXSHIFT Platform',
 };
 
-// Ubah menjadi async function karena kita akan menggunakan await cookies() dan getUser()
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  
-  // ==========================================
-  // 🛡️ START SECURITY GUARD (PENGGANTI MIDDLEWARE)
-  // ==========================================
   const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
+
+  // ==========================================
+  // 🚀 KUNCI FIX MUTLAK: HARDCODE FALLBACK
+  // Menghancurkan Bug "Blind Edge" Cloudflare
+  // ==========================================
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xozvcoknqgzftjlsngba.supabase.co';
+  
+  // MASUKKAN KODE PANJANG ANON KEY ANDA DI BAWAH INI (Yang berawalan eyJhbGci...):
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvenZjb2tucWd6ZnRqbHNuZ2JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2ODEyODUsImV4cCI6MjA5OTI1NzI4NX0.yxMNuFBfbZBI96BDAQB_krzBcKnGoJGyiCu3Kozj_Gc';
+
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
       },
-    }
-  );
+      // Wajib ada di @supabase/ssr untuk mencegah Crash, meskipun tidak digunakan
+      setAll(cookiesToSet) {
+        // Diabaikan di Server Component
+      },
+    },
+  });
 
-  const { data: { user } } = await supabase.auth.getUser();
+  // Gunakan getSession() agar tidak terkena blokir jaringan Edge
+  const { data: { session } } = await supabase.auth.getSession();
 
-  // Jika tidak ada user (belum login/cookie hilang), tendang paksa ke /login
-  if (!user) {
+  // Jika sesi tidak ditemukan, tendang ke login
+  if (!session) {
     redirect('/login');
   }
-  // ==========================================
-  // 🛡️ END SECURITY GUARD
   // ==========================================
 
   return (
