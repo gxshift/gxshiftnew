@@ -5,9 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 import { Gamepad2, Edit2, Trash2, Plus, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
-// HAPUS runtime='edge', ini adalah sumber utama crash CRUD Anda!
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 type Game = { id: string; name: string; slug: string; cover_image: string | null; is_active: boolean; order_index: number; };
