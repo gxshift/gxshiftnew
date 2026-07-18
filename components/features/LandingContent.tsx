@@ -190,7 +190,7 @@ export default function LandingContent({ levels, faqs, testimonials, whatsappNum
               { title: "PILIH PAKET & LEVEL", desc: "Tentukan paket dan level target boost kamu." },
               { title: "PESAN VIA WHATSAPP", desc: "Kirim detail pesanan langsung ke WhatsApp admin." },
               { title: "PEMBAYARAN", desc: "Selesaikan transaksi melalui metode pembayaran aman." },
-              { title: "GRINDING RANKING", desc: "Duduk manis, pro player kami akan selesaikan targetmu." }
+              { title: "BOOST RANKING", desc: "Duduk manis, pro player kami akan selesaikan targetmu." }
             ].map((step, idx) => (
               <motion.div 
                 key={idx}
