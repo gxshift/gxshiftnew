@@ -29,8 +29,9 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // WAJIB: Gunakan getUser() sesuai standar keamanan Supabase
-  const { data: { user } } = await supabase.auth.getUser();
+  // KUNCI 2: getSession() mendekripsi token lokal, tidak mengirim fetch request ke luar.
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user;
 
   if (isDashboard && !user) {
     const url = request.nextUrl.clone();
@@ -49,7 +50,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/dashboard', // Kunci fix penangkap root dashboard
+    '/dashboard',
     '/dashboard/:path*',
     '/login'
   ],

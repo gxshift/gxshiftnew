@@ -7,9 +7,7 @@ import { z } from 'zod';
 import { motion } from 'framer-motion';
 import { Mail, Lock, LogIn, AlertCircle, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
-
-// IMPORT SERVER ACTION
-import { loginAction } from './actions';
+import { createBrowserClient } from '@supabase/ssr'; // KUNCI 1: Login langsung dari Browser
 
 const loginSchema = z.object({
   email: z.string().email('Format email tidak valid'),
@@ -21,6 +19,12 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function AdminLogin() {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
+  // Inisialisasi Supabase di Browser
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   });
@@ -29,10 +33,13 @@ export default function AdminLogin() {
     setIsAuthenticating(true);
     toast.loading('Memverifikasi akses...', { id: 'auth-toast' });
     
-    // EKSEKUSI SERVER ACTION (Cookie dijamin tertanam dari Server)
-    const result = await loginAction(data.email, data.password);
+    // EKSEKUSI DI BROWSER: Cookie dijamin tertulis di laptop/HP pengguna!
+    const { error } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    });
 
-    if (result?.error) {
+    if (error) {
       toast.error('Akses Ditolak', {
         id: 'auth-toast',
         description: 'Email atau password salah.',
