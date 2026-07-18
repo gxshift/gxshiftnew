@@ -92,10 +92,10 @@ export default function AdminLevels() {
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `levels/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage.from('images').upload(filePath, compressedFile);
+      const { error: uploadError } = await supabase.storage.from('rank-icon').upload(filePath, compressedFile);
       if (uploadError) throw uploadError;
 
-      const { data: publicUrlData } = supabase.storage.from('images').getPublicUrl(filePath);
+      const { data: publicUrlData } = supabase.storage.from('rank-icon').getPublicUrl(filePath);
 
       setFormData(prev => ({ ...prev, icon_url: publicUrlData.publicUrl }));
       toast.success('Gambar berhasil diunggah!', { id: 'upload-toast' });
