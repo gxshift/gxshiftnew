@@ -323,7 +323,7 @@ export default function AdminLevels() {
               <Trophy className="text-primary"/> Daftar Paket Aktif
             </h2>
             <span className="text-xs text-gray-400 bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 hidden sm:block">
-              ✨ Tarik baris untuk mengubah urutan
+             Drag & Drop untuk mengatur urutan
             </span>
           </div>
           
