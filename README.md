@@ -2,7 +2,7 @@
 
 ![GXSHIFT Banner](/public/assets/og-image.jpg)
 
-GXSHIFT adalah platform *e-commerce* layanan *boosting* (joki) game premium yang dibangun dengan arsitektur **Next.js 15 App Router**. Dirancang dengan estetika *AAA Gaming* yang mengusung tema *Dark/Neon Glassmorphism*, platform ini dilengkapi dengan sistem pemesanan cerdas yang terintegrasi langsung ke WhatsApp, serta Dashboard CMS (Content Management System) kustom berbasis **Supabase** untuk pengelolaan data secara *real-time*.
+GXSHIFT adalah platform *e-commerce* layanan *boosting* game premium yang dibangun dengan arsitektur **Next.js 15 App Router**. Dirancang dengan estetika *AAA Gaming* yang mengusung tema *Dark/Neon Glassmorphism*, platform ini dilengkapi dengan sistem pemesanan cerdas yang terintegrasi langsung ke WhatsApp, serta Dashboard CMS (Content Management System) kustom berbasis **Supabase** untuk pengelolaan data secara *real-time*.
 
 ## ✨ Key Features
 

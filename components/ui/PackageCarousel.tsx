@@ -60,7 +60,7 @@ export default function PackageCarousel({ levels, whatsappNumber }: PackageCarou
       if (error) throw error;
 
       // 2. Redirect ke WhatsApp
-      const text = `Halo Admin GXSHIFT! 🚀%0A%0ASaya ingin order joki untuk game *${selectedPackage.games?.name}*.%0A%0A*Detail Pesanan:*%0A👤 Nickname: *${customerName}*%0A📱 No WA: *${waNumber}*%0A- Target: *${selectedPackage.name} (${selectedPackage.sub_level})*%0A- Harga: *${formatRupiah(selectedPackage.price)}*%0A%0AMohon panduan untuk pembayarannya.`;
+      const text = `Halo Admin GXSHIFT! 🚀%0A%0ASaya ingin order grinding untuk game *${selectedPackage.games?.name}*.%0A%0A*Detail Pesanan:*%0A👤 Nickname: *${customerName}*%0A📱 No WA: *${waNumber}*%0A- Target: *${selectedPackage.name} (${selectedPackage.sub_level})*%0A- Harga: *${formatRupiah(selectedPackage.price)}*%0A%0AMohon panduan untuk pembayarannya.`;
       window.open(`https://wa.me/${whatsappNumber}?text=${text}`, '_blank');
 
       // 3. Reset Form
@@ -101,9 +101,20 @@ export default function PackageCarousel({ levels, whatsappNumber }: PackageCarou
                 </div>
                 <h3 className="text-2xl font-black italic text-white mt-4 uppercase tracking-tight">{level.name}</h3>
                 <p className="text-primary text-xs font-bold uppercase tracking-[0.2em] mb-6">{level.sub_level}</p>
-                <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-8 border border-white/10 group-hover:scale-110 transition-transform duration-500">
-                  <Trophy className="text-gray-500 group-hover:text-primary transition-colors" size={40} strokeWidth={1.5} />
+                
+                {/* LOGIKA TAMPILAN ICON GAMBAR / PIALA */}
+                <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-8 border border-white/10 group-hover:scale-110 transition-transform duration-500 overflow-hidden relative">
+                  {level.icon_url ? (
+                    <img 
+                      src={level.icon_url} 
+                      alt={level.name} 
+                      className="w-16 h-16 object-contain drop-shadow-[0_0_15px_rgba(166,255,0,0.3)]" 
+                    />
+                  ) : (
+                    <Trophy className="text-gray-500 group-hover:text-primary transition-colors" size={40} strokeWidth={1.5} />
+                  )}
                 </div>
+
                 <div className="w-full flex justify-between items-end border-t border-white/10 pt-4 mb-6">
                   <div className="flex flex-col"><span className="text-[9px] text-gray-500 uppercase flex items-center gap-1 tracking-wider"><Clock size={10} /> Estimasi</span><span className="text-sm font-bold text-white mt-0.5">{level.estimated_time}</span></div>
                   <div className="flex flex-col text-right"><span className="text-[9px] text-gray-500 uppercase flex items-center justify-end gap-1 tracking-wider"><Zap size={10} /> Start From</span><span className="text-xl font-black text-primary mt-0.5">{formatRupiah(level.price)}</span></div>

@@ -82,21 +82,48 @@ export default function LandingContent({ levels, faqs, testimonials, whatsappNum
             transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
             className="flex-1 w-full max-w-md perspective-1000"
           >
-            <div className="glass-panel p-8 rounded-3xl border border-primary/30 relative overflow-hidden group shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform-gpu hover:rotate-y-[-5deg] hover:rotate-x-[5deg] transition-transform duration-500">
-              <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/20 blur-[60px] group-hover:bg-primary/30 transition-colors" />
-              <div className="relative z-10">
-                <h3 className="text-xs text-primary font-bold mb-2 tracking-[0.3em] uppercase">Target Achieved</h3>
-                <h2 className="text-4xl font-black text-white mb-6 uppercase tracking-tight leading-none">MYTHICAL<br/>GLORY</h2>
-                <div className="space-y-3 mb-8">
-                  <div className="flex items-center gap-3 text-sm text-gray-300"><CheckCircle2 size={16} className="text-primary"/> 100% Safe Account</div>
-                  <div className="flex items-center gap-3 text-sm text-gray-300"><CheckCircle2 size={16} className="text-primary"/> Verified Pro Players</div>
-                  <div className="flex items-center gap-3 text-sm text-gray-300"><CheckCircle2 size={16} className="text-primary"/> Live Progress Tracking</div>
+            {/* KARTU TARGET ACHIEVED YANG SUDAH DIROMBAK */}
+            <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-primary/30 relative overflow-hidden group shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform-gpu hover:rotate-y-[-5deg] hover:rotate-x-[5deg] transition-all duration-500">
+              
+              {/* Efek Glow Latar Belakang */}
+              <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/20 blur-[60px] group-hover:bg-primary/40 group-hover:scale-150 transition-all duration-500 pointer-events-none" />
+              
+              <div className="flex items-center justify-between relative z-10 gap-2">
+                
+                {/* SISI KIRI (Teks & List) */}
+                <div className="flex-1">
+                  <h3 className="text-xs text-primary font-bold mb-2 tracking-[0.3em] uppercase">Target Achieved</h3>
+                  <h2 className="text-3xl sm:text-4xl font-black text-white mb-6 uppercase tracking-tight leading-none">MYTHICAL<br/>GLORY</h2>
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-center gap-3 text-xs sm:text-sm text-gray-300">
+                      <CheckCircle2 size={16} className="text-primary shrink-0"/> 100% Safe Account
+                    </div>
+                    <div className="flex items-center gap-3 text-xs sm:text-sm text-gray-300">
+                      <CheckCircle2 size={16} className="text-primary shrink-0"/> Verified Pro Players
+                    </div>
+                    <div className="flex items-center gap-3 text-xs sm:text-sm text-gray-300">
+                      <CheckCircle2 size={16} className="text-primary shrink-0"/> Live Progress Tracking
+                    </div>
+                  </div>
                 </div>
-                <div className="w-full bg-black/50 p-4 rounded-xl border border-white/5 flex justify-between items-center">
-                  <span className="text-xs text-gray-500 uppercase font-bold">Win Rate</span>
-                  <span className="text-xl font-black text-primary">85.4%</span>
+
+                {/* SISI KANAN (Gambar Myhical Glory) */}
+                <div className="w-[110px] sm:w-[140px] shrink-0 relative z-10 flex justify-end">
+                  <img
+                    src="/mytical-glory.png"
+                    alt="Mythical Glory Rank"
+                    className="w-full h-auto object-contain drop-shadow-[0_0_20px_rgba(166,255,0,0.3)] transform transition-all duration-700 ease-out group-hover:scale-110 group-hover:-translate-y-2 group-hover:rotate-6 group-hover:drop-shadow-[0_0_35px_rgba(166,255,0,0.6)]"
+                  />
                 </div>
               </div>
+
+              {/* WIN RATE BAR */}
+              <div className="w-full bg-black/60 p-4 rounded-xl border border-white/5 flex justify-between items-center relative overflow-hidden mt-2 z-10">
+                <div className="absolute bottom-0 left-0 h-[2px] bg-primary w-[85.4%] shadow-[0_0_10px_rgba(166,255,0,1)]"></div>
+                <span className="text-xs text-gray-500 uppercase font-bold tracking-widest">Win Rate</span>
+                <span className="text-xl font-black text-primary glow-text">85.4%</span>
+              </div>
+              
             </div>
           </motion.div>
         </div>
