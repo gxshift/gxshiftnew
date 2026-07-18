@@ -36,8 +36,8 @@ export default async function AdminLayout({
       getAll() {
         return cookieStore.getAll();
       },
-      // Wajib ada di @supabase/ssr untuk mencegah Crash, meskipun tidak digunakan
-      setAll(cookiesToSet) {
+      // KUNCI FIX TYPESCRIPT: Tambahkan tipe data eksplisit pada parameter ini
+      setAll(cookiesToSet: { name: string; value: string; options: any }[]) {
         // Diabaikan di Server Component
       },
     },
