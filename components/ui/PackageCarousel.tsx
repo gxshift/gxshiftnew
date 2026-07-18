@@ -17,22 +17,43 @@ interface PackageCarouselProps {
   whatsappNumber: string;
 }
 
-export default function PackageCarousel({ levels, whatsappNumber }: PackageCarouselProps) {
+export default function PackageCarousel({ levels: initialLevels, whatsappNumber }: PackageCarouselProps) {
+  // --- SOLUSI NEXT.JS CACHE: State untuk menampung data yang selalu fresh ---
+  const [liveLevels, setLiveLevels] = useState<Level[]>(initialLevels);
+
+  // Auto-Sync Background: Diam-diam menarik data terbaru dari Supabase saat komponen dimuat
+  useEffect(() => {
+    const fetchFreshLevels = async () => {
+      const { data } = await supabase
+        .from('levels')
+        .select('*, games(*)')
+        .order('order_index');
+        
+      if (data) {
+        setLiveLevels(data as Level[]);
+      }
+    };
+
+    fetchFreshLevels();
+  }, []); // Hanya berjalan sekali saat halaman dibuka
+
   const [selectedPackage, setSelectedPackage] = useState<Level | null>(null);
   
   // STATE FORM
   const [customerName, setCustomerName] = useState('');
-  const [waNumber, setWaNumber] = useState(''); // State Baru untuk No WA
+  const [waNumber, setWaNumber] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const uniqueGames = Array.from(new Map(levels.map((level) => [level.games?.id, level.games])).values()).filter((game): game is NonNullable<Level['games']> => game !== undefined && game !== null);
+  // Menggunakan 'liveLevels' agar datanya selalu up-to-date
+  const uniqueGames = Array.from(new Map(liveLevels.map((level) => [level.games?.id, level.games])).values()).filter((game): game is NonNullable<Level['games']> => game !== undefined && game !== null);
   const [activeGameId, setActiveGameId] = useState<string | null>(null);
 
   useEffect(() => {
     if (uniqueGames.length > 0 && uniqueGames[0] && !activeGameId) setActiveGameId(uniqueGames[0].id);
   }, [uniqueGames, activeGameId]);
 
-  const filteredLevels = levels.filter((level) => level.game_id === activeGameId);
+  // Menggunakan 'liveLevels' untuk filter
+  const filteredLevels = liveLevels.filter((level) => level.game_id === activeGameId);
   const [emblaRef, emblaApi] = useEmblaCarousel({ align: 'start', containScroll: 'trimSnaps', dragFree: true });
   const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
@@ -46,7 +67,6 @@ export default function PackageCarousel({ levels, whatsappNumber }: PackageCarou
     
     setIsSubmitting(true);
     try {
-      // 1. Simpan ke Database (Dasbor admin membaca dari sini)
       const { error } = await supabase.from('orders').insert([{
         customer_name: customerName,
         nickname: customerName,
@@ -59,11 +79,9 @@ export default function PackageCarousel({ levels, whatsappNumber }: PackageCarou
 
       if (error) throw error;
 
-      // 2. Redirect ke WhatsApp
       const text = `Halo Admin GXSHIFT! 🚀%0A%0ASaya ingin order grinding untuk game *${selectedPackage.games?.name}*.%0A%0A*Detail Pesanan:*%0A👤 Nickname: *${customerName}*%0A📱 No WA: *${waNumber}*%0A- Target: *${selectedPackage.name} (${selectedPackage.sub_level})*%0A- Harga: *${formatRupiah(selectedPackage.price)}*%0A%0AMohon panduan untuk pembayarannya.`;
       window.open(`https://wa.me/${whatsappNumber}?text=${text}`, '_blank');
 
-      // 3. Reset Form
       setSelectedPackage(null);
       setCustomerName('');
       setWaNumber('');
@@ -75,7 +93,7 @@ export default function PackageCarousel({ levels, whatsappNumber }: PackageCarou
     }
   };
 
-  if (!levels || levels.length === 0) return <div className="text-center text-gray-500 py-10">Belum ada paket tersedia.</div>;
+  if (!liveLevels || liveLevels.length === 0) return <div className="text-center text-gray-500 py-10">Belum ada paket tersedia.</div>;
 
   return (
     <div className="w-full relative px-4 sm:px-12 max-w-[1400px] mx-auto">
@@ -102,13 +120,13 @@ export default function PackageCarousel({ levels, whatsappNumber }: PackageCarou
                 <h3 className="text-2xl font-black italic text-white mt-4 uppercase tracking-tight">{level.name}</h3>
                 <p className="text-primary text-xs font-bold uppercase tracking-[0.2em] mb-6">{level.sub_level}</p>
                 
-                {/* LOGIKA TAMPILAN ICON GAMBAR / PIALA */}
+                {/* TAMPILAN ICON GAMBAR YANG DIPERBAIKI */}
                 <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mb-8 border border-white/10 group-hover:scale-110 transition-transform duration-500 overflow-hidden relative">
                   {level.icon_url ? (
                     <img 
                       src={level.icon_url} 
                       alt={level.name} 
-                      className="w-16 h-16 object-contain drop-shadow-[0_0_15px_rgba(166,255,0,0.3)]" 
+                      className="w-[80%] h-[80%] object-contain drop-shadow-[0_0_15px_rgba(166,255,0,0.3)]" 
                     />
                   ) : (
                     <Trophy className="text-gray-500 group-hover:text-primary transition-colors" size={40} strokeWidth={1.5} />
