@@ -8,8 +8,9 @@ interface GlobalState {
 }
 
 export const useStore = create<GlobalState>((set) => ({
-  whatsappNumber: '6282120002589', // Fallback default
-  setWhatsappNumber: (num) => set({ whatsappNumber: num }),
+  whatsappNumber: '6282120002589', 
+  // SEMENTARA KITA MATIKAN FUNGSI TIMPA-NYA UNTUK TESTING
+  setWhatsappNumber: (num) => console.log("Mencoba menimpa WA, tapi ditahan oleh sistem!"), 
   activeGameId: null,
   setActiveGameId: (id) => set({ activeGameId: id }),
 }));
