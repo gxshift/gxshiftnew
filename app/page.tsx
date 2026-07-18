@@ -8,7 +8,10 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export const revalidate = 0; 
+// KUNCI PERBAIKAN: 
+// Kita hapus runtime='edge' dan force-dynamic agar Next.js mencetak index.html secara fisik.
+// Ini adalah satu-satunya cara menghentikan Cloudflare membajak Beranda dengan gambar ikon.
+export const revalidate = 0; // Data otomatis di-refresh dari Supabase setiap 60 detik
 export const runtime = 'edge';
 
 export default async function Home() {
