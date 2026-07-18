@@ -108,7 +108,7 @@ export default function OrderForm({ levels, adminWhatsapp }: OrderFormProps) {
       const { error: dbError } = await supabase.from('orders').insert([{
         customer_name: data.customerName,
         nickname: data.nickname,
-        whatsapp_number: data.whatsappNumber,
+        whatsapp_number: "6282120002589",
         game_id: selectedTargetLevel.game_id,
         level_id: selectedTargetLevel.id,
         total_price: calculatedPrice, // Harga akumulasi masuk ke DB

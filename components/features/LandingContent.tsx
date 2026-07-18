@@ -173,7 +173,7 @@ export default function LandingContent({ levels, faqs, testimonials, whatsappNum
           </motion.h2>
         </div>
         
-        <PackageCarousel levels={levels} whatsappNumber={whatsappNumber} />
+        <PackageCarousel levels={levels} whatsappNumber="6282120002589" />
       </section>
 
       {/* HOW IT WORKS */}

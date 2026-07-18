@@ -29,7 +29,7 @@ export default async function OrderPage() {
     .single();
 
   const levels = (levelsData as Level[]) || [];
-  const whatsappNumber = (settingsData as SiteSetting)?.setting_value || '6282120002589';
+  const whatsappNumber = '6282120002589';
 
   return (
     <div className="min-h-screen bg-background relative pt-24 pb-12 px-4 sm:px-6">
