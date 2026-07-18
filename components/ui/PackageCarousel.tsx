@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
+import Autoplay from 'embla-carousel-autoplay'; // <-- IMPORT PLUGIN AUTOPLAY
 import { ChevronLeft, ChevronRight, Trophy, Zap, Clock, X, Send, User, Phone, Search, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@supabase/supabase-js';
@@ -34,7 +35,7 @@ export default function PackageCarousel({ levels: initialLevels, whatsappNumber 
   // STATE FORM & PENCARIAN
   const [customerName, setCustomerName] = useState('');
   const [waNumber, setWaNumber] = useState('');
-  const [currentLevelId, setCurrentLevelId] = useState(''); // State untuk Posisi Level Saat Ini
+  const [currentLevelId, setCurrentLevelId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -52,7 +53,12 @@ export default function PackageCarousel({ levels: initialLevels, whatsappNumber 
     return matchGame && matchSearch;
   });
 
-  const [emblaRef, emblaApi] = useEmblaCarousel({ align: 'start', containScroll: 'trimSnaps', dragFree: true });
+  // --- IMPLEMENTASI AUTOPLAY & LOOP DI SINI ---
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    { align: 'start', containScroll: 'trimSnaps', dragFree: true, loop: true }, // loop: true agar tidak mentok
+    [Autoplay({ delay: 3000, stopOnMouseEnter: true, stopOnInteraction: false })] // delay 3 detik, stop saat di-hover, lanjut setelah digeser manual
+  );
+
   const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
 
@@ -67,7 +73,6 @@ export default function PackageCarousel({ levels: initialLevels, whatsappNumber 
     if (availableCurrentLevels.length === 0) return selectedPackage?.price || 0;
     if (!currentLevelId || !selectedPackage) return 0;
     
-    // Menjumlahkan harga semua tier dari (Level Saat Ini + 1) hingga (Target Level)
     return gameLevels
       .filter(l => l.order_index > currentLevel!.order_index && l.order_index <= selectedPackage.order_index)
       .reduce((sum, l) => sum + l.price, 0);
@@ -93,9 +98,9 @@ export default function PackageCarousel({ levels: initialLevels, whatsappNumber 
         whatsapp_number: waNumber,
         game_id: selectedPackage.game_id,
         level_id: selectedPackage.id,
-        total_price: calculatedPrice, // Kirim harga yang sudah diakumulasi!
+        total_price: calculatedPrice,
         status: 'pending',
-        notes: `Level Saat Ini: ${currentLevelStr}` // Simpan detail awal di kolom notes database
+        notes: `Level Saat Ini: ${currentLevelStr}`
       }]);
 
       if (error) throw error;
