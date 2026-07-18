@@ -105,7 +105,7 @@ export default function PackageCarousel({ levels: initialLevels, whatsappNumber 
 
       if (error) throw error;
 
-      const text = `Halo Admin GXSHIFT! 🚀%0A%0ASaya ingin order grinding untuk game *${selectedPackage.games?.name}*.%0A%0A*Detail Pesanan:*%0A👤 Nickname: *${customerName}*%0A📱 No WA: *${waNumber}*%0A- Level Saat Ini: *${currentLevelStr}*%0A- Target Boost: *${selectedPackage.name} (${selectedPackage.sub_level})*%0A- Total Biaya: *${formatRupiah(calculatedPrice)}*%0A%0AMohon panduan untuk pembayarannya.`;
+      const text = `Halo Admin GXSHIFT! 🚀%0A%0ASaya ingin order boost rank untuk game *${selectedPackage.games?.name}*.%0A%0A*Detail Pesanan:*%0A👤 Nickname: *${customerName}*%0A📱 No WA: *${waNumber}*%0A- Level Saat Ini: *${currentLevelStr}*%0A- Target Boost: *${selectedPackage.name} (${selectedPackage.sub_level})*%0A- Total Biaya: *${formatRupiah(calculatedPrice)}*%0A%0AMohon panduan untuk pembayarannya.`;
       window.open(`https://wa.me/${whatsappNumber}?text=${text}`, '_blank');
 
       setSelectedPackage(null);
