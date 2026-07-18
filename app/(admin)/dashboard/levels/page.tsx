@@ -95,14 +95,14 @@ export default function AdminLevels() {
 
       // 3. Upload ke Supabase Storage (Bucket 'images')
       const { error: uploadError } = await supabase.storage
-        .from('images')
+        .from('rank-icon')
         .upload(filePath, compressedFile);
 
       if (uploadError) throw uploadError;
 
       // 4. Dapatkan Public URL
       const { data: publicUrlData } = supabase.storage
-        .from('images')
+        .from('rank-icon')
         .getPublicUrl(filePath);
 
       // 5. Masukkan URL ke Form Data

@@ -61,14 +61,14 @@ export default function AdminGames() {
 
       // 3. Upload ke Supabase
       const { error: uploadError } = await supabase.storage
-        .from('images')
+        .from('game-cover')
         .upload(filePath, compressedFile);
 
       if (uploadError) throw uploadError;
 
       // 4. Ambil Public URL
       const { data: publicUrlData } = supabase.storage
-        .from('images')
+        .from('game-cover')
         .getPublicUrl(filePath);
 
       // 5. Masukkan URL ke form
