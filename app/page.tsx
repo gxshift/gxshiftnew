@@ -11,8 +11,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 // KUNCI PERBAIKAN: 
 // Kita hapus runtime='edge' dan force-dynamic agar Next.js mencetak index.html secara fisik.
 // Ini adalah satu-satunya cara menghentikan Cloudflare membajak Beranda dengan gambar ikon.
-export const revalidate = 0; // Data otomatis di-refresh dari Supabase setiap 60 detik
-export const runtime = 'edge';
+export const revalidate = 60; // Data otomatis di-refresh dari Supabase setiap 60 detik
 
 export default async function Home() {
   // 1. Fetch Levels (Tarik SEMUA game yang aktif agar Tabs Kategori berfungsi)
