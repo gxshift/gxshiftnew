@@ -7,8 +7,14 @@ import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Shield, Send, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { createClient } from '@supabase/supabase-js'; // KUNCI: Import Supabase
 import { orderSchema, OrderFormValues } from '@/lib/validations';
 import { Level } from '@/types';
+
+// Inisialisasi Klien Supabase untuk menyimpan pesanan
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface OrderFormProps {
   levels: Level[];
@@ -25,7 +31,6 @@ export default function OrderForm({ levels, adminWhatsapp }: OrderFormProps) {
     register,
     handleSubmit,
     watch,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
@@ -50,23 +55,41 @@ export default function OrderForm({ levels, adminWhatsapp }: OrderFormProps) {
       const selectedLevel = levels.find((l) => l.id === data.levelId);
       if (!selectedLevel) throw new Error("Paket tidak ditemukan");
 
-      const priceText = selectedLevel.price === 0 ? 'Harga Dinamis (Custom)' : `Rp ${selectedLevel.price.toLocaleString('id-ID')}`;
+      // 1. SIMPAN DATA KE SUPABASE (AGAR TAMPIL DI DASBOR)
+      const { error: dbError } = await supabase.from('orders').insert([{
+        customer_name: data.customerName,
+        nickname: data.nickname,
+        whatsapp_number: data.whatsappNumber, // Nomor WA berhasil direkam!
+        game_id: selectedLevel.game_id,
+        level_id: selectedLevel.id,
+        total_price: selectedLevel.price,
+        status: 'pending'
+      }]);
 
-      // Menyusun format WhatsApp
+      if (dbError) {
+        console.error("Supabase Error:", dbError);
+        throw new Error("Gagal menyimpan ke database");
+      }
+
+      // 2. BENTUK PESAN WHATSAPP & REDIRECT
+      const priceText = selectedLevel.price === 0 ? 'Harga Dinamis (Custom)' : `Rp ${selectedLevel.price.toLocaleString('id-ID')}`;
       const waText = `*NEW BOOSTING ORDER (GXSHIFT)*\n------------------------\n*Data Pemesan:*\nNama: ${data.customerName}\nWhatsApp: ${data.whatsappNumber}\n\n*Data Akun:*\nGame: Mobile Legends\nNickname: ${data.nickname}\nServer ID: ${data.serverId}\n\n*Target Boost:*\nRank Awal: ${data.currentRank}\nRank Tujuan: ${selectedLevel.name} (${selectedLevel.sub_level})\nCatatan: ${data.notes || '-'}\n------------------------\n*Total Tagihan:* ${priceText}\n\nMohon informasi metode pembayaran.`;
 
       const encodedText = encodeURIComponent(waText);
-      const waUrl = `https://wa.me/${adminWhatsapp}?text=${encodedText}`;
+      // Bersihkan nomor admin dari spasi/karakter aneh
+      const cleanAdminNumber = adminWhatsapp.replace(/\D/g, ''); 
+      const waUrl = `https://wa.me/${cleanAdminNumber}?text=${encodedText}`;
 
-      toast.success('Mengalihkan ke WhatsApp...', {
-        description: 'Mohon tunggu sebentar.',
+      toast.success('Pesanan Berhasil Dicatat!', {
+        description: 'Mengalihkan ke WhatsApp...',
       });
 
       // Buka WhatsApp di tab baru
       window.open(waUrl, '_blank');
+      
     } catch (error) {
       toast.error('Gagal memproses pesanan', {
-        description: 'Silakan periksa kembali data Anda.',
+        description: 'Silakan periksa kembali data Anda atau hubungi admin.',
       });
     }
   };
@@ -107,7 +130,7 @@ export default function OrderForm({ levels, adminWhatsapp }: OrderFormProps) {
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-gray-300 uppercase">Nomor WhatsApp</label>
+            <label className="text-xs font-bold text-gray-300 uppercase">Nomor WhatsApp Anda</label>
             <input 
               {...register('whatsappNumber')}
               type="tel"
@@ -193,10 +216,10 @@ export default function OrderForm({ levels, adminWhatsapp }: OrderFormProps) {
         <button 
           type="submit" 
           disabled={isSubmitting}
-          className="w-full md:w-auto px-10 py-4 bg-primary text-black font-extrabold rounded-xl hover:bg-[#b5ff2b] transition-all shadow-[0_0_20px_rgba(166,255,0,0.3)] hover:shadow-[0_0_30px_rgba(166,255,0,0.6)] hover:scale-105 flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:scale-100"
+          className="w-full md:w-auto px-10 py-4 bg-primary text-black font-extrabold rounded-xl hover:bg-[#b5ff2b] transition-all shadow-[0_0_20px_rgba(166,255,0,0.3)] hover:shadow-[0_0_30px_rgba(166,255,0,0.6)] hover:scale-105 flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:scale-100 uppercase"
         >
-          {isSubmitting ? 'MEMPROSES...' : 'KIRIM VIA WHATSAPP'}
-          <Send size={18} />
+          {isSubmitting ? 'MEMPROSES...' : 'ORDER SEKARANG VIA WHATSAPP'}
+          {!isSubmitting && <Send size={18} />}
         </button>
       </div>
     </motion.form>
