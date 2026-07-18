@@ -6,9 +6,7 @@ export async function middleware(request: NextRequest) {
   const isDashboard = path.startsWith('/dashboard');
   const isLogin = path.startsWith('/login');
 
-  if (!isDashboard && !isLogin) {
-    return NextResponse.next();
-  }
+  if (!isDashboard && !isLogin) return NextResponse.next();
 
   let supabaseResponse = NextResponse.next({ request });
 
@@ -31,21 +29,19 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // KUNCI FIX TERAKHIR: Gunakan getSession(), JANGAN getUser()!
-  // getSession mendekode Cookie secara lokal dan tidak akan pernah terkena Timeout di Cloudflare Edge.
-  const { data: { session } } = await supabase.auth.getSession();
-  const user = session?.user;
+  // WAJIB: Gunakan getUser() sesuai standar keamanan Supabase
+  const { data: { user } } = await supabase.auth.getUser();
 
   if (isDashboard && !user) {
-    const response = NextResponse.redirect(new URL('/login', request.url));
-    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-    return response;
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
+    return NextResponse.redirect(url);
   }
 
   if (isLogin && user) {
-    const response = NextResponse.redirect(new URL('/dashboard', request.url));
-    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-    return response;
+    const url = request.nextUrl.clone();
+    url.pathname = '/dashboard';
+    return NextResponse.redirect(url);
   }
 
   return supabaseResponse;
@@ -53,7 +49,7 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/dashboard',
+    '/dashboard', // Kunci fix penangkap root dashboard
     '/dashboard/:path*',
     '/login'
   ],
