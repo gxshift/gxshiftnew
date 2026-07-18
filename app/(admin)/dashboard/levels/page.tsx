@@ -4,8 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { Trophy, AlertCircle, Edit2, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
-export const runtime = 'edge';
-// Inisialisasi Supabase
+
+// HAPUS runtime='edge' (Ini adalah Client Component, tidak butuh dan tidak boleh pakai edge runtime)
+
+// Inisialisasi Supabase yang Aman
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -48,24 +50,40 @@ export default function AdminLevels() {
   const fetchData = async () => {
     setIsLoading(true);
     
-    // Fetch Games untuk Dropdown
-    const { data: gamesData } = await supabase.from('games').select('id, name');
-    if (gamesData) {
-      setGames(gamesData);
-      // Set default game_id jika form kosong dan ada data game
-      if (!formData.game_id && gamesData.length > 0) {
-        setFormData(prev => ({ ...prev, game_id: gamesData[0].id }));
-      }
+    // Validasi pencegahan error jika Env kosong
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error("Supabase URL atau Key tidak ditemukan di Environment Variables.");
+      setIsLoading(false);
+      return;
     }
 
-    // Fetch Levels
-    const { data: levelsData, error } = await supabase
-      .from('levels')
-      .select('*, games(name)')
-      .order('order_index');
-    
-    if (!error && levelsData) setLevels(levelsData);
-    setIsLoading(false);
+    try {
+      // Fetch Games untuk Dropdown
+      const { data: gamesData, error: gamesError } = await supabase.from('games').select('id, name');
+      if (gamesError) throw gamesError;
+
+      if (gamesData) {
+        setGames(gamesData);
+        // Set default game_id jika form kosong dan ada data game
+        if (!formData.game_id && gamesData.length > 0) {
+          setFormData(prev => ({ ...prev, game_id: gamesData[0].id }));
+        }
+      }
+
+      // Fetch Levels
+      const { data: levelsData, error: levelsError } = await supabase
+        .from('levels')
+        .select('*, games(name)')
+        .order('order_index');
+      
+      if (levelsError) throw levelsError;
+      if (levelsData) setLevels(levelsData);
+    } catch (error) {
+      console.error("Gagal memuat data levels:", error);
+      toast.error('Gagal mengambil data dari server.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -122,30 +140,38 @@ export default function AdminLevels() {
 
     setIsLoading(true);
 
-    if (isEditing) {
-      // Update
-      const { error } = await supabase.from('levels').update(formData).eq('id', isEditing);
-      if (error) toast.error('Gagal Update', { description: error.message });
-      else toast.success('Berhasil', { description: 'Paket berhasil diperbarui!' });
-    } else {
-      // Create
-      const { error } = await supabase.from('levels').insert([formData]);
-      if (error) toast.error('Gagal Tambah', { description: error.message });
-      else toast.success('Berhasil', { description: 'Paket baru berhasil ditambahkan!' });
+    try {
+      if (isEditing) {
+        // Update
+        const { error } = await supabase.from('levels').update(formData).eq('id', isEditing);
+        if (error) throw error;
+        toast.success('Berhasil', { description: 'Paket berhasil diperbarui!' });
+      } else {
+        // Create
+        const { error } = await supabase.from('levels').insert([formData]);
+        if (error) throw error;
+        toast.success('Berhasil', { description: 'Paket baru berhasil ditambahkan!' });
+      }
+      
+      cancelEdit();
+      await fetchData();
+    } catch (error: any) {
+      toast.error('Gagal Menyimpan', { description: error.message });
     }
-
-    cancelEdit();
-    await fetchData();
   };
 
   // Hapus Data
   const handleDelete = async (id: string) => {
     if (window.confirm('Yakin ingin menghapus paket (level) ini?')) {
       setIsLoading(true);
-      const { error } = await supabase.from('levels').delete().eq('id', id);
-      if (error) toast.error('Gagal Hapus', { description: error.message });
-      else toast.success('Berhasil', { description: 'Paket dihapus.' });
-      await fetchData();
+      try {
+        const { error } = await supabase.from('levels').delete().eq('id', id);
+        if (error) throw error;
+        toast.success('Berhasil', { description: 'Paket dihapus.' });
+        await fetchData();
+      } catch (error: any) {
+        toast.error('Gagal Hapus', { description: error.message });
+      }
     }
   };
 
@@ -182,33 +208,33 @@ export default function AdminLevels() {
 
             <div>
               <label className="block text-xs font-bold uppercase text-gray-400 mb-1">Nama Paket (Rank)</label>
-              <input required type="text" name="name" value={formData.name} onChange={handleChange} className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-3 text-sm focus:border-primary focus:outline-none transition-colors" placeholder="Contoh: EPIC TO LEGEND" />
+              <input required type="text" name="name" value={formData.name} onChange={handleChange} className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-3 text-sm focus:border-primary focus:outline-none transition-colors text-white" placeholder="Contoh: EPIC TO LEGEND" />
             </div>
 
             <div>
               <label className="block text-xs font-bold uppercase text-gray-400 mb-1">Sub Level / Detail</label>
-              <input type="text" name="sub_level" value={formData.sub_level} onChange={handleChange} className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-3 text-sm focus:border-primary focus:outline-none transition-colors" placeholder="Contoh: All Tiers atau Bintang 1-5" />
+              <input type="text" name="sub_level" value={formData.sub_level} onChange={handleChange} className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-3 text-sm focus:border-primary focus:outline-none transition-colors text-white" placeholder="Contoh: All Tiers atau Bintang 1-5" />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold uppercase text-gray-400 mb-1">Harga (Rp)</label>
-                <input required type="number" name="price" value={formData.price} onChange={handleChange} className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-3 text-sm focus:border-primary focus:outline-none transition-colors" />
+                <input required type="number" name="price" value={formData.price} onChange={handleChange} className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-3 text-sm focus:border-primary focus:outline-none transition-colors text-white" />
                 <p className="text-[9px] text-gray-500 mt-1">Isi 0 untuk "Dynamic Price"</p>
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase text-gray-400 mb-1">Urutan Tampil</label>
-                <input required type="number" name="order_index" value={formData.order_index} onChange={handleChange} className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-3 text-sm focus:border-primary focus:outline-none transition-colors" />
+                <input required type="number" name="order_index" value={formData.order_index} onChange={handleChange} className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-3 text-sm focus:border-primary focus:outline-none transition-colors text-white" />
               </div>
             </div>
 
             <div>
               <label className="block text-xs font-bold uppercase text-gray-400 mb-1">Estimasi Waktu</label>
-              <input required type="text" name="estimated_time" value={formData.estimated_time} onChange={handleChange} className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-3 text-sm focus:border-primary focus:outline-none transition-colors" placeholder="Contoh: 1-2 Days" />
+              <input required type="text" name="estimated_time" value={formData.estimated_time} onChange={handleChange} className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-3 text-sm focus:border-primary focus:outline-none transition-colors text-white" placeholder="Contoh: 1-2 Days" />
             </div>
 
             <div className="flex flex-col gap-3 pt-2">
-              <label className="flex items-center gap-2 text-sm cursor-pointer hover:text-primary transition-colors">
+              <label className="flex items-center gap-2 text-sm cursor-pointer hover:text-primary transition-colors text-white">
                 <input type="checkbox" name="is_active" checked={formData.is_active} onChange={handleChange} className="accent-primary w-4 h-4" />
                 Paket Aktif (Tampil di Web)
               </label>

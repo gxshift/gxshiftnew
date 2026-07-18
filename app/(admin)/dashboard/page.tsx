@@ -5,10 +5,9 @@ import { createClient } from '@supabase/supabase-js';
 import { ShoppingCart, DollarSign, Gamepad2, Trophy, Clock, ArrowUpRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
-// 🚀 HARDCODE FALLBACK (Menghindari Bug Cloudflare Env)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xozvcoknqgzftjlsngba.supabase.co';
-// MASUKKAN KODE ANON KEY ANDA DI BAWAH INI:
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvenZjb2tucWd6ZnRqbHNuZ2JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2ODEyODUsImV4cCI6MjA5OTI1NzI4NX0.yxMNuFBfbZBI96BDAQB_krzBcKnGoJGyiCu3Kozj_Gc';
+// PENGAMBILAN ENV YANG BERSIH DAN AMAN UNTUK CLIENT-SIDE
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 // Inisialisasi Murni Client-Side (Otomatis membaca tiket login di LocalStorage)
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -24,6 +23,13 @@ export default function AdminDashboardOverview() {
   });
 
   useEffect(() => {
+    // Validasi pencegahan error jika Env kosong (Sangat jarang di Client-Side)
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error("Supabase URL atau Key tidak ditemukan di Environment Variables.");
+      setIsLoading(false);
+      return;
+    }
+
     const fetchDashboardData = async () => {
       try {
         // 1. Ambil Total Orders
@@ -75,6 +81,16 @@ export default function AdminDashboardOverview() {
         <p className="text-xs font-bold uppercase tracking-widest text-gray-400 animate-pulse">Menyiapkan Command Center...</p>
       </div>
     );
+  }
+
+  // Jika Env kosong, berikan pesan error visual (Safety Net)
+  if (!supabaseUrl || !supabaseAnonKey) {
+     return (
+       <div className="w-full h-[60vh] flex flex-col items-center justify-center text-red-500">
+         <p className="font-bold uppercase tracking-widest mb-2">SISTEM KRITIS</p>
+         <p className="text-xs text-gray-400">Environment Variables Supabase belum terkonfigurasi untuk sistem klien.</p>
+       </div>
+     );
   }
 
   return (
