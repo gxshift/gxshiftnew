@@ -9,6 +9,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export const revalidate = 0; 
+export const runtime = 'edge';
 
 export default async function Home() {
   // 1. Fetch Levels (Tarik SEMUA game yang aktif agar Tabs Kategori berfungsi)
